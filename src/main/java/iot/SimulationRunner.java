@@ -84,6 +84,7 @@ public class SimulationRunner {
         ReliableEfficientDistanceGateway reliableEfficientDistanceGateway = new ReliableEfficientDistanceGateway();
         algorithms.add(reliableEfficientDistanceGateway);
 
+//      TODO: add custom adaptation
 
         /*
          * Setting the mote probes

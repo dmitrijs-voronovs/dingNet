@@ -9,6 +9,7 @@ import java.util.List;
 /**
  * Factory different kind of {@link Mote}
  */
+// TODO: extend
 public class MoteFactory {
 
     public static Mote createMote(long devEUI, double xPos, double yPos, int transmissionPower,
