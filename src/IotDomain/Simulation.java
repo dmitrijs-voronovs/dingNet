@@ -104,14 +104,7 @@ public class Simulation implements Runnable {
      */
     public void singleRun(Integer speed) {
         //Check if a mote can participate in this run.
-        for(Mote mote: getEnvironment().getMotes()){
-            Double activityProbability;
-            if(getInputProfile().getProbabilitiesForMotesKeys().contains(getEnvironment().getMotes().indexOf(mote)))
-                activityProbability = getInputProfile().getProbabilityForMote(getEnvironment().getMotes().indexOf(mote));
-            else
-                activityProbability = 1.0;
-            mote.enable(Math.random() >= 1.0 - activityProbability);
-        }
+        enableMotes();
         // reset the environment.
         getEnvironment().reset();
 
@@ -197,13 +190,7 @@ public class Simulation implements Runnable {
         }
     }
 
-    /**
-     * A method for running the simulation as described in the inputProfile.
-     */
-    public void run(){
-
-        getEnvironment().reset();
-
+    private void enableMotes() {
         for(Mote mote: getEnvironment().getMotes()){
             Double activityProbability;
             if(getInputProfile().getProbabilitiesForMotesKeys().contains(getEnvironment().getMotes().indexOf(mote)))
@@ -212,6 +199,16 @@ public class Simulation implements Runnable {
                 activityProbability = 1.0;
             mote.enable(Math.random() >= 1.0 - activityProbability);
         }
+    }
+
+    /**
+     * A method for running the simulation as described in the inputProfile.
+     */
+    public void run(){
+
+        getEnvironment().reset();
+
+        enableMotes();
 
 
         for(int i =0; i< getInputProfile().getNumberOfRuns();i++) {
