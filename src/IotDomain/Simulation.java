@@ -108,7 +108,7 @@ public class Simulation implements Runnable {
         // reset the environment.
         getEnvironment().reset();
 
-        Boolean arrived = true;
+        boolean arrived = true;
         HashMap<Mote,Integer> waypoinMap = new HashMap<>();
         HashMap<Mote,LocalTime> timemap = new HashMap<>();
         HashMap<Mote,Pair<Integer,Integer>> locationmap = new HashMap<>();
@@ -123,7 +123,7 @@ public class Simulation implements Runnable {
             if(mote.getPath().size() != 0) {
                 if (Integer.signum(mote.getXPos()- getEnvironment().toMapXCoordinate(mote.getPath().getLast())) != 0 ||
                         Integer.signum(mote.getYPos()- getEnvironment().toMapYCoordinate(mote.getPath().getLast())) != 0) {
-                    arrived = arrived && false;
+                    arrived = false;
                 }
             }
             waypoinMap.put(mote,0);
@@ -144,15 +144,7 @@ public class Simulation implements Runnable {
                                 LinkedList historymap = locationhistorymap.get(mote);
                                 historymap.add(new Pair<>(mote.getXPos(), mote.getYPos()));
                                 locationhistorymap.put(mote, historymap);
-                                if (mote.shouldSend()) {
-                                    LinkedList<Byte> data = new LinkedList<>();
-                                    for (MoteSensor sensor : mote.getSensors()) {
-                                        data.add(sensor.getValue(mote.getXPos(), mote.getYPos(), getEnvironment().getTime()));
-                                    }
-                                    Byte[] dataByte = new Byte[data.toArray().length];
-                                    data.toArray(dataByte);
-                                    mote.sendToGateWay(dataByte, new HashMap<>());
-                                }
+                                sendDataToGateway(mote);
                             } else waypoinMap.put(mote, waypoinMap.get(mote) + 1);
                         }
                     }
@@ -166,7 +158,7 @@ public class Simulation implements Runnable {
                     if (mote.getPath().size() != 0) {
                         if (Integer.signum(mote.getXPos() - environment.toMapXCoordinate(mote.getPath().getLast())) != 0 ||
                                 Integer.signum(mote.getYPos() - environment.toMapYCoordinate(mote.getPath().getLast())) != 0) {
-                            arrived = arrived && false;
+                            arrived = false;
                         }
                     }
                 }
@@ -187,6 +179,18 @@ public class Simulation implements Runnable {
             Pair<Integer,Integer> location = locationmap.get(mote);
             mote.setXPos(location.getLeft());
             mote.setYPos(location.getRight());
+        }
+    }
+
+    private void sendDataToGateway(Mote mote) {
+        if (mote.shouldSend()) {
+            LinkedList<Byte> data = new LinkedList<>();
+            for (MoteSensor sensor : mote.getSensors()) {
+                data.add(sensor.getValue(mote.getXPos(), mote.getYPos(), getEnvironment().getTime()));
+            }
+            Byte[] dataByte = new Byte[data.toArray().length];
+            data.toArray(dataByte);
+            mote.sendToGateWay(dataByte, new HashMap<>());
         }
     }
 
@@ -245,15 +249,7 @@ public class Simulation implements Runnable {
                                 if (Integer.signum(mote.getXPos() - getEnvironment().toMapXCoordinate(mote.getPath().get(waypoinMap.get(mote)))) != 0 ||
                                         Integer.signum(mote.getYPos() - getEnvironment().toMapYCoordinate(mote.getPath().get(waypoinMap.get(mote)))) != 0) {
                                     getEnvironment().moveMote(mote, mote.getPath().get(waypoinMap.get(mote)));
-                                    if (mote.shouldSend()) {
-                                        LinkedList<Byte> data = new LinkedList<>();
-                                        for (MoteSensor sensor : mote.getSensors()) {
-                                            data.add(sensor.getValue(mote.getXPos(), mote.getYPos(), getEnvironment().getTime()));
-                                        }
-                                        Byte[] dataByte = new Byte[data.toArray().length];
-                                        data.toArray(dataByte);
-                                        mote.sendToGateWay(dataByte, new HashMap<>());
-                                    }
+                                    sendDataToGateway(mote);
                                 } else waypoinMap.put(mote, waypoinMap.get(mote) + 1);
                             }
                         }
