@@ -131,6 +131,7 @@ public class MainGUI extends JFrame {
     private Double usedEnergy;
     private Integer packetsSent;
     private Integer packetsLost;
+    private Integer selectedRun = 0;
 
 
     public MainGUI() {
@@ -1156,7 +1157,7 @@ public class MainGUI extends JFrame {
                 frame.setVisible(true);
             }
             if (e.getClickCount() == 1) {
-                setCharacteristics(index - 1, 0);
+                setCharacteristics(index - 1, selectedRun);
             }
 
 
@@ -1713,7 +1714,7 @@ public class MainGUI extends JFrame {
      * @param run       The number of the run.
      */
     public void setCharacteristics(Integer moteIndex, Integer run) {
-
+        selectedRun = run;
         moteCharacteristicsLabel.setText("Mote " + (moteIndex + 1) + " | Run " + (run + 1));
         // update received power graph
         receivedPowerGraph.removeAll();
