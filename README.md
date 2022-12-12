@@ -1,0 +1,2 @@
+# dingNet
+DingNet - adaptation extention
