@@ -31,7 +31,7 @@ public class Environment implements Serializable {
     /**
      * A list containing all motes currently active on the map.
      */
-    private LinkedList<Mote> motes = new LinkedList<>();
+    private LinkedList<AgingMote> motes = new LinkedList<>();
 
     /**
      * A list containing all gateways currently active on the map.
@@ -201,7 +201,7 @@ public class Environment implements Serializable {
      * @return A list with all the motes on the map.
      */
     
-    public LinkedList<Mote> getMotes() {
+    public LinkedList<AgingMote> getMotes() {
         return motes;
     }
 
@@ -211,7 +211,7 @@ public class Environment implements Serializable {
      * @Post    If the mote is in this environment, it is added to the list.
      */
     
-    public void addMote(Mote mote) {
+    public void addMote(AgingMote mote) {
         if(mote.getEnvironment() == this){
             motes.add(mote);
         }
@@ -269,6 +269,7 @@ public class Environment implements Serializable {
      * @Post Increases the time with a given amount of miliseconds.
      */
     public void tick(long milliSeconds) {
+        // TODO: replace MILLIS with the time unit from Input profile
         this.clock= this.clock.plus(milliSeconds, ChronoUnit.MILLIS);
     }
 
