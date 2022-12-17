@@ -289,7 +289,7 @@ public class MainGUI extends JFrame {
                                 Integer wayPointY = Integer.valueOf(waypoint.getTextContent().split(",")[1]);
                                 path.add(new GeoPosition(simulation.getEnvironment().toLatitude(wayPointY), simulation.getEnvironment().toLongitude(wayPointX)));
                             }
-                            new Mote(devEUI, xPos, yPos, simulation.getEnvironment(), transmissionPower, spreadingFactor, moteSensors, energyLevel, path, samplingRate, movementSpeed);
+                            new AgingMote(devEUI, xPos, yPos, simulation.getEnvironment(), transmissionPower, spreadingFactor, moteSensors, energyLevel, path, samplingRate, movementSpeed);
                         }
 
                         Element gatewayNode;
