@@ -23,5 +23,14 @@
     <orderEntry type="library" name="commons-logging-1.1.1 (2)" level="project" />
     <orderEntry type="library" name="AnnotationsDoclets" level="application" />
     <orderEntry type="library" name="jfreechart-1.5.0" level="project" />
+    <orderEntry type="module-library" exported="">
+      <library>
+        <CLASSES>
+          <root url="jar://$APPLICATION_HOME_DIR$/lib/forms_rt.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
   </component>
 </module>
