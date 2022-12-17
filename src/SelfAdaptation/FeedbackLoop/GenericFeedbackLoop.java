@@ -21,12 +21,12 @@ public abstract class GenericFeedbackLoop {
     /**
      * The mote probe used by the feedback loop.
      */
-    private MoteProbe moteProbe;
+    protected MoteProbe moteProbe;
 
     /**
      * The mote effector used by the feedback loop.
      */
-    private MoteEffector moteEffector;
+    protected MoteEffector moteEffector;
 
     /**
      * A boolean to know if the feedback loop is active

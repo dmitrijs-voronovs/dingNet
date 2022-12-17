@@ -24,7 +24,7 @@ public abstract class NetworkEntity implements Serializable{
      * A boolean to know when the entity is transmitting
      */
 
-    private Boolean isTransmitting;
+    protected Boolean isTransmitting;
 
     /**
      * A list representing the power setting of every transmission.
