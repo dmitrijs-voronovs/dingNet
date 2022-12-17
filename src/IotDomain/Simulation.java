@@ -163,7 +163,8 @@ public class Simulation implements Runnable {
                     }
                 }
             }
-            environment.tick(1);
+            envTick();
+
         }
 
         for(Mote mote : environment.getMotes()){
@@ -180,6 +181,11 @@ public class Simulation implements Runnable {
             mote.setXPos(location.getLeft());
             mote.setYPos(location.getRight());
         }
+    }
+
+    private void envTick() {
+        environment.tick(1);
+        environment.getMotes().stream().filter(Mote::isEnabled).forEach(m -> m.increaseAgeBy(1));
     }
 
     private void sendDataToGateway(Mote mote) {
@@ -268,7 +274,7 @@ public class Simulation implements Runnable {
                         }
                     }
                 }
-                environment.tick(1);
+                envTick();
             }
 
             gui.setProgress(getInputProfile().getNumberOfRuns(),getInputProfile().getNumberOfRuns());

@@ -12,7 +12,7 @@ public class MoteProbe {
     /**
      * A list with feedBackLoops using the probe.
      */
-    private GenericFeedbackLoop genericFeedbackLoop;
+    protected GenericFeedbackLoop genericFeedbackLoop;
 
     /**
      * Constructs a MoteProbe with no FeedBackLoops using it.

@@ -78,7 +78,6 @@ public class Mote extends NetworkEntity {
     public Mote(Long DevEUI, Integer xPos, Integer yPos, Environment environment, Integer transmissionPower,
                 Integer SF, LinkedList<MoteSensor> moteSensors, Integer energyLevel, LinkedList<GeoPosition> path, Integer samplingRate, Double movementSpeed, Integer startOffset){
        super(DevEUI, xPos,yPos, environment,transmissionPower,SF,1.0);
-        environment.addMote(this);
         OverTheAirActivation();
         this.moteSensors = moteSensors;
         this.path = path;
