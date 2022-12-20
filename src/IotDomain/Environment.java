@@ -49,6 +49,10 @@ public class Environment implements Serializable {
      */
     private LocalTime clock;
     /**
+     * specific to calculations
+     */
+    private LocalTime simClock;
+    /**
      * The number of zones in the configuration.
      */
     private Integer numberOfZones = 36;
@@ -85,6 +89,7 @@ public class Environment implements Serializable {
             this.characteristics = new Characteristic[0][0];
         }
         clock = LocalTime.of(0,0);
+        simClock = LocalTime.of(0,0);
         this.mapOrigin = mapOrigin;
         this.MQTTServer = new MQTTServer();
         this.wayPoints = wayPoints;
@@ -263,14 +268,20 @@ public class Environment implements Serializable {
         return clock;
     }
 
+    public LocalTime getSimTime() {
+        return simClock;
+    }
+
     /**
      * Increases the time with a given amount of miliseconds.
-     * @param milliSeconds
+     * @param period
      * @Post Increases the time with a given amount of miliseconds.
      */
-    public void tick(long milliSeconds) {
-        // TODO: replace MILLIS with the time unit from Input profile
-        this.clock= this.clock.plus(milliSeconds, ChronoUnit.MILLIS);
+    public void tick(long period) {
+        this.clock= this.clock.plus(Constants.SIMULATION_TIME_MEASUREMENT);
+    }
+    public void simTick(long period) {
+        this.simClock= this.simClock.plus(period, ChronoUnit.MILLIS);
     }
 
     public void resetClock(){
