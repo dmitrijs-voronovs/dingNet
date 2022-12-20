@@ -10,8 +10,8 @@ import SelfAdaptation.FeedbackLoop.GenericFeedbackLoop;
 import SelfAdaptation.FeedbackLoop.ReliableAgingHandlingFeedbackLoop;
 import SelfAdaptation.FeedbackLoop.ReliableEfficientDistanceGateway;
 import SelfAdaptation.FeedbackLoop.ReliableEfficientSignalGateway;
+import SelfAdaptation.Instrumentation.AgingMoteProbe;
 import SelfAdaptation.Instrumentation.MoteEffector;
-import SelfAdaptation.Instrumentation.MoteProbe;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
@@ -130,7 +130,7 @@ public class MainGUI extends JFrame {
     private static LinkedList<InputProfile> inputProfiles;
     private static Simulation simulation;
     private static LinkedList<GenericFeedbackLoop> algorithms = new LinkedList<>();
-    private LinkedList<MoteProbe> moteProbe;
+    private LinkedList<AgingMoteProbe> moteProbe;
     private LinkedList<MoteEffector> moteEffector;
     private QualityOfService QoS = new QualityOfService(new HashMap<>());
     private Double usedEnergy;
@@ -162,7 +162,7 @@ public class MainGUI extends JFrame {
          */
         GenericFeedbackLoop noAdaptation = new GenericFeedbackLoop("No Adaptation") {
             @Override
-            public void adapt(Mote mote, Gateway gateway) {
+            public void adapt(AgingMote mote, Gateway gateway) {
 
             }
         };
@@ -183,7 +183,7 @@ public class MainGUI extends JFrame {
         moteProbe = new LinkedList<>();
         moteEffector = new LinkedList<>();
         for (int i = 0; i < algorithms.size(); i++) {
-            moteProbe.add(new MoteProbe());
+            moteProbe.add(new AgingMoteProbe());
             moteEffector.add(new MoteEffector());
         }
         for (GenericFeedbackLoop feedbackLoop : algorithms) {
@@ -1496,7 +1496,7 @@ public class MainGUI extends JFrame {
         toolBarAdaptation.add(label17);
         speedSlider = new JSlider();
         speedSlider.setMajorTickSpacing(3);
-        speedSlider.setMaximum(5);
+        speedSlider.setMaximum(10);
         speedSlider.setMinimum(1);
         speedSlider.setMinorTickSpacing(1);
         speedSlider.setPaintLabels(false);
