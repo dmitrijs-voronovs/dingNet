@@ -117,8 +117,8 @@ public class MoteProbe {
      */
     public void trigger(Gateway gateway, Long devEUI){
         Boolean found = false;
-        Mote sender = null;
-        for (Mote mote :gateway.getEnvironment().getMotes()){
+        AgingMote sender = null;
+        for (AgingMote mote :gateway.getEnvironment().getMotes()){
             if(mote.getEUI() == devEUI){
                 sender = mote;
                 found = true;

@@ -1,9 +1,9 @@
 package SelfAdaptation.FeedbackLoop;
 
+import IotDomain.AgingMote;
 import IotDomain.Gateway;
-import IotDomain.Mote;
+import SelfAdaptation.Instrumentation.AgingMoteProbe;
 import SelfAdaptation.Instrumentation.MoteEffector;
-import SelfAdaptation.Instrumentation.MoteProbe;
 // 
 // 
 
@@ -21,7 +21,7 @@ public abstract class GenericFeedbackLoop {
     /**
      * The mote probe used by the feedback loop.
      */
-    protected MoteProbe moteProbe;
+    protected AgingMoteProbe moteProbe;
 
     /**
      * The mote effector used by the feedback loop.
@@ -37,7 +37,7 @@ public abstract class GenericFeedbackLoop {
      * A method describing what the approach should do when being called on a mote.
      * @param mote The mote to adapt.
      */
-    public abstract void adapt(Mote mote, Gateway dataGateway);
+    public abstract void adapt(AgingMote mote, Gateway dataGateway);
 
     /**
      * A method to activate the feedback loop.
@@ -92,7 +92,7 @@ public abstract class GenericFeedbackLoop {
      * Returns the mote probe used by this feedbackLoop.
      * @return The mote probe used by this feedbackLoop.
      */
-    public MoteProbe getMoteProbe() {
+    public AgingMoteProbe getMoteProbe() {
         return moteProbe;
     }
 
@@ -108,7 +108,7 @@ public abstract class GenericFeedbackLoop {
      * Sets the mote probe and adds this feedback loop to the mote probe.
      * @param moteProbe the mote probe to set.
      */
-    public void setMoteProbe(MoteProbe moteProbe) {
+    public void setMoteProbe(AgingMoteProbe moteProbe) {
         this.moteProbe = moteProbe;
         getMoteProbe().setGenericFeedbackLoop(this);
     }
