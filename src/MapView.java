@@ -236,6 +236,7 @@ public class MapView {
             }
 
             environment.tick(1500);
+            environment.simTick(1500);
 
 
         }
