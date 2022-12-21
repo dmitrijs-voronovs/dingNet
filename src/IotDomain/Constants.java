@@ -5,12 +5,11 @@ import java.time.Period;
 import java.util.Calendar;
 
 public class Constants {
-    public static final Period DEVICE_ADJUSTMENT_RATE = Period.ofDays(5);
+    public static final Period DEVICE_ADJUSTMENT_RATE = Period.ofDays(1);
     public static final Calendar SIMULATION_BEGINNING;
     public static final float COMPENSATION_COEFFICIENT = 0.9f;
     public static final Period DEVICE_LIFESPAN = Period.ofYears(10);
-//    public static final Duration SIMULATION_TIME_MEASUREMENT = Duration.ofMinutes(1);
-    public static final Duration SIMULATION_TIME_MEASUREMENT = Duration.ofHours(1);
+    public static final Duration SIMULATION_TIME_MEASUREMENT = Duration.ofHours(12);
 
 
     static {
