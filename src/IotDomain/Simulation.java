@@ -113,7 +113,7 @@ public class Simulation implements Runnable {
         HashMap<Mote,Pair<Integer,Integer>> locationmap = new HashMap<>();
         HashMap<Mote,LinkedList<Pair<Integer,Integer>>> locationhistorymap = new HashMap<>();
         for(Mote mote : getEnvironment().getMotes()){
-            timemap.put(mote, getEnvironment().getSimTime());
+            timemap.put(mote, getEnvironment().getSimulationInternalTime());
             locationmap.put(mote,new Pair<>(mote.getXPos(),mote.getYPos()));
             locationhistorymap.put(mote, new LinkedList<>());
             LinkedList historyMap = locationhistorymap.get(mote);
@@ -134,15 +134,12 @@ public class Simulation implements Runnable {
                 if(mote.isEnabled()) {
                     if (Integer.signum(mote.getPath().size() - waypoinMap.get(mote)) > 0) {
 
-                        long envTimeOrig = getEnvironment().getTime().toNanoOfDay();
-//                        long envTime = Duration.ofNanos(envTimeOrig).toMinutes();
-                        long envTime = getEnvironment().getSimTime().toNanoOfDay();
-                        long moteTimeOrig = timemap.get(mote).toNanoOfDay();
-//                        long moteTime = Duration.ofNanos(moteTimeOrig).toMinutes();
-                        long moteTime = timemap.get(mote).toNanoOfDay();
-                        if (1 / mote.getMovementSpeed() * 1000 < (envTime - moteTime) / 100000 &&
-                                Long.signum(envTime / 100000 - Math.abs(mote.getStartOffset()) * 100000) > 0) {
-                            timemap.put(mote, getEnvironment().getSimTime());
+//                        long envTime = getEnvironment().getSimTime().toNanoOfDay();
+//                        long moteTime = timemap.get(mote).toNanoOfDay();
+//                        if (1 / mote.getMovementSpeed() * 1000 < (envTime - moteTime) / 100000 &&
+//                                Long.signum(envTime / 100000 - Math.abs(mote.getStartOffset()) * 100000) > 0) {
+                        if (isMoteInSimulation(timemap,mote)) {
+                            timemap.put(mote, getEnvironment().getSimulationInternalTime());
                             if (Integer.signum(mote.getXPos() - getEnvironment().toMapXCoordinate(mote.getPath().get(waypoinMap.get(mote)))) != 0 ||
                                     Integer.signum(mote.getYPos() - getEnvironment().toMapYCoordinate(mote.getPath().get(waypoinMap.get(mote)))) != 0) {
                                 getEnvironment().moveMote(mote, mote.getPath().get(waypoinMap.get(mote)));
@@ -190,7 +187,7 @@ public class Simulation implements Runnable {
 
     private void envTick() {
         environment.tick(1);
-        environment.simTick(1);
+        environment.simulationInternalClockTick(1);
 //        TODO: remove
         environment.getMotes().stream().filter(Mote::isEnabled).forEach(m -> m.increaseAgeBy(1));
     }
@@ -199,6 +196,7 @@ public class Simulation implements Runnable {
         if (mote.shouldSend()) {
             LinkedList<Byte> data = new LinkedList<>();
             for (MoteSensor sensor : mote.getSensors()) {
+//                TODO: check
                 data.add(sensor.getValue(mote.getXPos(), mote.getYPos(), getEnvironment().getTime()));
             }
             Byte[] dataByte = new Byte[data.toArray().length];
@@ -239,7 +237,7 @@ public class Simulation implements Runnable {
             HashMap<Mote, LocalTime> timemap = new HashMap<>();
             HashMap<Mote, Pair<Integer, Integer>> locationmap = new HashMap<>();
             for (Mote mote : getEnvironment().getMotes()) {
-                timemap.put(mote, getEnvironment().getTime());
+                timemap.put(mote, getEnvironment().getSimulationInternalTime());
                 locationmap.put(mote, new Pair<>(mote.getXPos(), mote.getYPos()));
                 if (mote.getPath().size() != 0) {
                     if (Integer.signum(mote.getXPos() - getEnvironment().toMapXCoordinate(mote.getPath().getLast())) != 0 ||
@@ -256,9 +254,8 @@ public class Simulation implements Runnable {
                     if(mote.isEnabled()) {
                         if (Integer.signum(mote.getPath().size() - waypoinMap.get(mote)) > 0) {
 
-                            if (1 / mote.getMovementSpeed() * 1000 < (getEnvironment().getTime().toNanoOfDay() - timemap.get(mote).toNanoOfDay()) / 100000 &&
-                                    Long.signum(getEnvironment().getTime().toNanoOfDay() / 100000 - Math.abs(mote.getStartOffset()) * 100000) > 0) {
-                                timemap.put(mote, getEnvironment().getTime());
+                            if (isMoteInSimulation(timemap, mote)) {
+                                timemap.put(mote, getEnvironment().getSimulationInternalTime());
                                 if (Integer.signum(mote.getXPos() - getEnvironment().toMapXCoordinate(mote.getPath().get(waypoinMap.get(mote)))) != 0 ||
                                         Integer.signum(mote.getYPos() - getEnvironment().toMapYCoordinate(mote.getPath().get(waypoinMap.get(mote)))) != 0) {
                                     getEnvironment().moveMote(mote, mote.getPath().get(waypoinMap.get(mote)));
@@ -292,6 +289,13 @@ public class Simulation implements Runnable {
             }
         }
 
+    }
+
+    private boolean isMoteInSimulation(HashMap<Mote, LocalTime> timemap, Mote mote) {
+        long envTime = getEnvironment().getSimulationInternalTime().toNanoOfDay();
+        long moteTime = timemap.get(mote).toNanoOfDay();
+        return 1 / mote.getMovementSpeed() * 1000 < (envTime - moteTime) / 100000 &&
+                Long.signum(envTime / 100000 - Math.abs(mote.getStartOffset()) * 100000) > 0;
     }
 
     public GenericFeedbackLoop getApproach() {

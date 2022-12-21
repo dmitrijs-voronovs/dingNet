@@ -49,9 +49,9 @@ public class Environment implements Serializable {
      */
     private LocalTime clock;
     /**
-     * specific to calculations
+     * Time specific to internal calculations
      */
-    private LocalTime simClock;
+    private LocalTime simulationInternalClock;
     /**
      * The number of zones in the configuration.
      */
@@ -89,7 +89,7 @@ public class Environment implements Serializable {
             this.characteristics = new Characteristic[0][0];
         }
         clock = LocalTime.of(0,0);
-        simClock = LocalTime.of(0,0);
+        simulationInternalClock = LocalTime.of(0,0);
         this.mapOrigin = mapOrigin;
         this.MQTTServer = new MQTTServer();
         this.wayPoints = wayPoints;
@@ -268,8 +268,8 @@ public class Environment implements Serializable {
         return clock;
     }
 
-    public LocalTime getSimTime() {
-        return simClock;
+    public LocalTime getSimulationInternalTime() {
+        return simulationInternalClock;
     }
 
     /**
@@ -280,8 +280,8 @@ public class Environment implements Serializable {
     public void tick(long period) {
         this.clock= this.clock.plus(Constants.SIMULATION_TIME_MEASUREMENT);
     }
-    public void simTick(long period) {
-        this.simClock= this.simClock.plus(period, ChronoUnit.MILLIS);
+    public void simulationInternalClockTick(long period) {
+        this.simulationInternalClock = this.simulationInternalClock.plus(period, ChronoUnit.MILLIS);
     }
 
     public void resetClock(){
