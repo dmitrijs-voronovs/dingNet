@@ -3,7 +3,6 @@ package SelfAdaptation.FeedbackLoop;
 import IotDomain.*;
 
 import java.time.LocalTime;
-import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 
 // TODO: remake according to the aging strategy - i.e. increase every Nth frame power for every old mote
@@ -32,13 +31,21 @@ public class ReliableAgingHandlingFeedbackLoop extends GenericFeedbackLoop {
 //        Instant timeForAd = Instant.from(previousDepartureTime).plusSeconds(Constants.DEVICE_ADJUSTMENT_RATE.get(ChronoUnit.SECONDS));
 
 //        LocalTime timeForAdaptation = previousDepartureTime.plus(Constants.DEVICE_ADJUSTMENT_RATE);
-        LocalTime timeForAdaptation = previousDepartureTime.plus(Constants.DEVICE_ADJUSTMENT_RATE.getDays() * 24, ChronoUnit.HOURS);
-        if (lastTransmission.getDepartureTime().isAfter(timeForAdaptation)) {
+//        TODO: fix
+//        LocalTime timeForAdaptation = previousDepartureTime.plus(Constants.DEVICE_ADJUSTMENT_RATE.getDays() * 24, ChronoUnit.HOURS);
+//        LocalTime timeForAdaptation = previousDepartureTime.plus(Constants.DEVICE_ADJUSTMENT_RATE.toNanos(), ChronoUnit.HOURS);
+        int MILLIS_IN_SECONDS = 1_000_000;
+        long prevInMillisOriginal = previousDepartureTime.toNanoOfDay() / MILLIS_IN_SECONDS;
+        long prevInMillisInCorrectMetric = prevInMillisOriginal * Constants.SIMULATION_TIME_MEASUREMENT.toMillis();
+        long timeForAdaptation = prevInMillisInCorrectMetric + Constants.DEVICE_ADJUSTMENT_RATE.toMillis();
+//        if (lastTransmission.getDepartureTime().isAfter(timeForAdaptation)) {
+        long lastTimeInMillis = lastTransmission.getDepartureTime().toNanoOfDay() / MILLIS_IN_SECONDS * Constants.SIMULATION_TIME_MEASUREMENT.toMillis();
+        if (lastTimeInMillis >= timeForAdaptation) {
             messageDepartureTimeBuffer.put(mote, lastTransmission.getDepartureTime());
 //            TODO: fix mote age to be int
             System.out.println("adapting mote with id " + mote.getEUI());
             moteEffector.setPower(mote, moteProbe.getPowerSetting(mote) + agingCalculator.calculateEnergyToAdd(Constants.SIMULATION_BEGINNING , (int) moteProbe.getAge(mote)));
-//            moteEffector.
+//            moteEffector.setPower(mote, (int) (moteProbe.getPowerSetting(mote) * 1.5));
         }
     }
 
