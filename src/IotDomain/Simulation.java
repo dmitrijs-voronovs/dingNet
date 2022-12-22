@@ -134,10 +134,6 @@ public class Simulation implements Runnable {
                 if(mote.isEnabled()) {
                     if (Integer.signum(mote.getPath().size() - waypoinMap.get(mote)) > 0) {
 
-//                        long envTime = getEnvironment().getSimTime().toNanoOfDay();
-//                        long moteTime = timemap.get(mote).toNanoOfDay();
-//                        if (1 / mote.getMovementSpeed() * 1000 < (envTime - moteTime) / 100000 &&
-//                                Long.signum(envTime / 100000 - Math.abs(mote.getStartOffset()) * 100000) > 0) {
                         if (isMoteInSimulation(timemap,mote)) {
                             timemap.put(mote, getEnvironment().getSimulationInternalTime());
                             if (Integer.signum(mote.getXPos() - getEnvironment().toMapXCoordinate(mote.getPath().get(waypoinMap.get(mote)))) != 0 ||
