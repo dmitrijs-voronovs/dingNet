@@ -15,7 +15,6 @@ public class AgingMote extends Mote {
         setAge(0);
         setAgingFactor(0f);
         setTotalEnergyConsumed(0f);
-//        this.agingFactorHistory = new Vector<>(new Vector<>());
         this.agingFactorHistory = new Vector<>();
         this.agingFactorHistory.add(new Vector<>());
     }
