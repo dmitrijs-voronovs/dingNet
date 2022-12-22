@@ -1049,7 +1049,7 @@ public class MainGUI extends JFrame {
         gateWayPainter.setWaypoints(gateWays.keySet());
 
         MoteWaypointPainter<Waypoint> motePainter = new MoteWaypointPainter<>();
-        motePainter.setWaypoints(motes.keySet());
+        motePainter.setWaypoints(motes.keySet(), environment.getMotes());
 
         MoteNumberWaypointPainter<Waypoint> moteNumberPainter = new MoteNumberWaypointPainter<>();
         moteNumberPainter.setWaypoints(motes);
