@@ -1,5 +1,7 @@
 package SelfAdaptation.FeedbackLoop;
 
+import IotDomain.Constants;
+
 import java.util.Calendar;
 
 enum Weather {
@@ -31,12 +33,13 @@ public class AgingCalculator {
         int monthN = simulationBeginning.get(Calendar.MONTH);
 
         if (monthN <= 0) return 0;
-        return calculateDelta(monthN + 1) - calculateDelta(monthN);
+        double energyDelta = calculateDelta(monthN + 1) - calculateDelta(monthN);
+        return (int) Math.ceil(Constants.AGING_ADJUSTMENT_MULTIPLIER * energyDelta);
     }
 
-    private int calculateDelta(int monthN) {
+    private double calculateDelta(int monthN) {
         float USAGE_FACTOR = 1.05f;
-        return (int) Math.round(calculateEnergyDeltaForMonth(monthN) * USAGE_FACTOR * getWeatherMonthCoefficient(monthN));
+        return calculateEnergyDeltaForMonth(monthN) * USAGE_FACTOR * getWeatherMonthCoefficient(monthN);
     }
 
     private double calculateEnergyDeltaForMonth(int monthN) {
