@@ -202,6 +202,7 @@ public class Simulation implements Runnable {
     private void envTick() {
         environment.tick(1);
         environment.getMotes().stream().filter(Mote::isEnabled).forEach(AgingMote::increaseAge);
+        environment.getMotes().stream().filter(Mote::isEnabled).forEach(m -> m.addAgingFactor(getEnvironment().getAgingAdjustmentCalculator().getAgingFactorUnit()));
     }
 
     private void sendDataToGateway(Mote mote) {

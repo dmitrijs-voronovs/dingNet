@@ -1,6 +1,4 @@
-package SelfAdaptation.FeedbackLoop;
-
-import IotDomain.Constants;
+package SelfAdaptation.FeedbackLoop.utils;
 
 import java.time.Duration;
 import java.util.Calendar;
@@ -14,7 +12,7 @@ enum Weather {
 
 public class EnergyAdjustmentCalculator {
     private static final float USAGE_FACTOR = 1.05f;
-    private static final int DAYS_IN_MONTH = 30;
+    public static final int DAYS_IN_MONTH = 30;
     private final Weather[] yearlyWeatherByMonth = {
             Weather.COLD, //Jan
             Weather.COLD, //Feb
@@ -30,17 +28,22 @@ public class EnergyAdjustmentCalculator {
             Weather.COLD, //Dec
 
     };
+    private final float agingAdjustmentMultiplier;
 
-    int calculateEnergyToAdd(Calendar simulationBeginning, Duration currentTime, Duration moteAge) {
+    public EnergyAdjustmentCalculator(float agingAdjustmentMultiplier) {
+        this.agingAdjustmentMultiplier = agingAdjustmentMultiplier;
+    }
+
+    public int calculateEnergyToAdd(Calendar simulationBeginning, Duration currentTime, Duration moteAge) {
         Calendar adaptationTime = getAdaptationTime(simulationBeginning, currentTime);
-        int monthN = adaptationTime.get(Calendar.MONTH);
-        if (monthN == 0) return 0;
-
         int moteAgeInMoths = (int) Math.floor(moteAge.toDays() / DAYS_IN_MONTH);
-//        double energyDelta = calculateDelta(moteAgeInMoths, monthN) - calculateDelta(moteAgeInMoths - 1, Math.floorMod(monthN - 1, 12));
+        if (moteAgeInMoths == 0) return 0;
+
+        int monthOfYear = adaptationTime.get(Calendar.MONTH);
+//        double energyDelta = calculateDelta(moteAgeInMoths, monthOfYear) - calculateDelta(moteAgeInMoths - 1, Math.floorMod(monthOfYear - 1, 12));
 //        TODO: should we compare months with the same temperature?
-        double energyDelta = calculateDelta(moteAgeInMoths, monthN) - calculateDelta(moteAgeInMoths - 1, monthN);
-        return (int) Math.ceil(Constants.AGING_ADJUSTMENT_MULTIPLIER * energyDelta);
+        double energyDelta = calculateDelta(moteAgeInMoths, monthOfYear) - calculateDelta(moteAgeInMoths - 1, monthOfYear);
+        return (int) Math.ceil(agingAdjustmentMultiplier * energyDelta);
     }
 
     private static Calendar getAdaptationTime(Calendar simulationBeginning, Duration currentTime) {

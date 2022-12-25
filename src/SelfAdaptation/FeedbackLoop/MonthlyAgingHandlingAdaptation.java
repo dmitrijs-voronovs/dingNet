@@ -1,6 +1,7 @@
 package SelfAdaptation.FeedbackLoop;
 
 import IotDomain.*;
+import SelfAdaptation.FeedbackLoop.utils.EnergyAdjustmentCalculator;
 import utils.TimeHelper;
 
 import java.time.Duration;
@@ -9,13 +10,14 @@ import java.util.HashMap;
 
 public class MonthlyAgingHandlingAdaptation extends GenericFeedbackLoop {
     private final HashMap<Mote, LocalTime> messageDepartureTimeBuffer = new HashMap<>();
-    private final EnergyAdjustmentCalculator energyAdjustmentCalculator = new EnergyAdjustmentCalculator();
+    private final EnergyAdjustmentCalculator energyAdjustmentCalculator = new EnergyAdjustmentCalculator(Constants.AGING_ADJUSTMENT_MULTIPLIER);
     public MonthlyAgingHandlingAdaptation(){
         super("Aging-factor-based");
     }
 
     @Override
     public void adapt(AgingMote mote, Gateway dataGateway){
+        System.out.println("trying to adapt");
         LoraTransmission lastTransmission = getLastTransmission(dataGateway);
         LocalTime prevDepartureTime = messageDepartureTimeBuffer.get(mote);
 
@@ -29,6 +31,7 @@ public class MonthlyAgingHandlingAdaptation extends GenericFeedbackLoop {
             System.out.println("adapting mote with id " + mote.getEUI());
             int energyAdjustment = energyAdjustmentCalculator.calculateEnergyToAdd(Constants.SIMULATION_BEGINNING, getCurrentSimulationTime(dataGateway), moteProbe.getAge(mote));
             moteEffector.setPower(mote, moteProbe.getPowerSetting(mote) + energyAdjustment);
+            moteEffector.addAgingFactor(mote, dataGateway.getEnvironment().getAgingAdjustmentCalculator().getAgingFactorAdjustment());
         }
     }
 
