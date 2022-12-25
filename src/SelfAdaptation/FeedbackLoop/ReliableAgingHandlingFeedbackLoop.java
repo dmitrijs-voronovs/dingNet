@@ -2,6 +2,7 @@ package SelfAdaptation.FeedbackLoop;
 
 import IotDomain.*;
 
+import java.time.Duration;
 import java.time.LocalTime;
 import java.util.HashMap;
 
@@ -10,10 +11,6 @@ import java.util.HashMap;
 public class ReliableAgingHandlingFeedbackLoop extends GenericFeedbackLoop {
     private final HashMap<Mote, LocalTime> messageDepartureTimeBuffer = new HashMap<>();
     private final AgingCalculator agingCalculator = new AgingCalculator();
-//    private HashMap<AgingMote,>
-    /**
-     * Constructs a distance based approach.
-     */
     public ReliableAgingHandlingFeedbackLoop(){
         super("Aging-factor-based");
     }
@@ -28,24 +25,16 @@ public class ReliableAgingHandlingFeedbackLoop extends GenericFeedbackLoop {
             return;
         }
 
-//        Instant timeForAd = Instant.from(previousDepartureTime).plusSeconds(Constants.DEVICE_ADJUSTMENT_RATE.get(ChronoUnit.SECONDS));
-
-//        LocalTime timeForAdaptation = previousDepartureTime.plus(Constants.DEVICE_ADJUSTMENT_RATE);
-//        TODO: fix
-//        LocalTime timeForAdaptation = previousDepartureTime.plus(Constants.DEVICE_ADJUSTMENT_RATE.getDays() * 24, ChronoUnit.HOURS);
-//        LocalTime timeForAdaptation = previousDepartureTime.plus(Constants.DEVICE_ADJUSTMENT_RATE.toNanos(), ChronoUnit.HOURS);
-        int MILLIS_IN_SECONDS = 1_000_000;
-        long prevInMillisOriginal = previousDepartureTime.toNanoOfDay() / MILLIS_IN_SECONDS;
+        long NANOS_IN_MILLI = Duration.ofMillis(1).toNanos();
+        long prevInMillisOriginal = previousDepartureTime.toNanoOfDay() / NANOS_IN_MILLI;
         long prevInMillisInCorrectMetric = prevInMillisOriginal * Constants.SIMULATION_TIME_MEASUREMENT.toMillis();
         long timeForAdaptation = prevInMillisInCorrectMetric + Constants.DEVICE_ADJUSTMENT_RATE.toMillis();
-//        if (lastTransmission.getDepartureTime().isAfter(timeForAdaptation)) {
-        long lastTimeInMillis = lastTransmission.getDepartureTime().toNanoOfDay() / MILLIS_IN_SECONDS * Constants.SIMULATION_TIME_MEASUREMENT.toMillis();
+        long lastTimeInMillis = lastTransmission.getDepartureTime().toNanoOfDay() / NANOS_IN_MILLI * Constants.SIMULATION_TIME_MEASUREMENT.toMillis();
         if (lastTimeInMillis >= timeForAdaptation) {
             messageDepartureTimeBuffer.put(mote, lastTransmission.getDepartureTime());
-//            TODO: fix mote age to be int
             System.out.println("adapting mote with id " + mote.getEUI());
-            moteEffector.setPower(mote, moteProbe.getPowerSetting(mote) + agingCalculator.calculateEnergyToAdd(Constants.SIMULATION_BEGINNING , (int) moteProbe.getAge(mote)));
-//            moteEffector.setPower(mote, (int) (moteProbe.getPowerSetting(mote) * 1.5));
+            int energyAdjustment = agingCalculator.calculateEnergyToAdd(Constants.SIMULATION_BEGINNING, (int) moteProbe.getAge(mote));
+            moteEffector.setPower(mote, moteProbe.getPowerSetting(mote) + energyAdjustment);
         }
     }
 

@@ -9,6 +9,7 @@ public class Constants {
     public static final float COMPENSATION_COEFFICIENT = 0.9f;
     public static final Duration DEVICE_LIFESPAN = Duration.ofDays(365 * 15);
     public static final Duration SIMULATION_TIME_MEASUREMENT = Duration.ofHours(1);
+    public static final float AGING_ADJUSTMENT_MULTIPLIER = 2;
 
 
     static {
