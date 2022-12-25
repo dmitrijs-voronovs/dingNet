@@ -29,9 +29,7 @@ public class AgingMote extends Mote {
     @Override
     protected void loraSend(LoraWanPacket message) {
         super.loraSend(message);
-        System.out.println("loraSend");
         if (!this.isTransmitting) {
-            System.out.println("updating history");
             updateAgingFactoryHistory();
         }
     }
@@ -76,8 +74,14 @@ public class AgingMote extends Mote {
         return agingFactor;
     }
 
-    protected void setAgingFactor(float agingFactor) {
-        this.agingFactor = agingFactor;
+    public void setAgingFactor(float agingFactor) {
+        System.out.println("current aging factor " + agingFactor);
+        this.agingFactor = Math.max(Math.min(agingFactor, 1), 0);
+        System.out.println("new aging factor " + Math.max(Math.min(agingFactor, 1), 0));
+    }
+
+    public void addAgingFactor(float agingFactor) {
+        setAgingFactor(this.agingFactor + agingFactor);
     }
 
     public Duration getAge() {
@@ -89,6 +93,7 @@ public class AgingMote extends Mote {
     }
 
     public void increaseAge() {
+        System.out.println("increasing age");
         setAge(age.plus(Constants.SIMULATION_TIME_MEASUREMENT));
     }
 
@@ -102,7 +107,7 @@ public class AgingMote extends Mote {
     }
 
     public AgingMote(Long DevEUI, Integer xPos, Integer yPos, Environment environment, Integer transmissionPower,
-                Integer SF, LinkedList<MoteSensor> moteSensors, Integer energyLevel, LinkedList<GeoPosition> path, Integer samplingRate, Double movementSpeed){
+                     Integer SF, LinkedList<MoteSensor> moteSensors, Integer energyLevel, LinkedList<GeoPosition> path, Integer samplingRate, Double movementSpeed){
         this(DevEUI,xPos,yPos, environment,transmissionPower,SF,moteSensors,energyLevel,path,samplingRate, movementSpeed, Math.abs((new Random()).nextInt(5)),Duration.ZERO,0);
     }
 

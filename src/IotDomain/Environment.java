@@ -1,6 +1,7 @@
 package IotDomain;
 
 
+import SelfAdaptation.FeedbackLoop.utils.AgingAdjustmentCalculator;
 import org.jxmapviewer.viewer.GeoPosition;
 
 import java.io.Serializable;
@@ -28,6 +29,10 @@ public class Environment implements Serializable {
      * The max y-coordinate allowed on the map
      */
     private final Integer maxYpos;
+    /**
+     * calculator for device aging adjustment
+     */
+    private final AgingAdjustmentCalculator agingAdjustmentCalculator;
     /**
      * A list containing all motes currently active on the map.
      */
@@ -89,6 +94,10 @@ public class Environment implements Serializable {
         this.MQTTServer = new MQTTServer();
         this.wayPoints = wayPoints;
         numberOfRuns = 1;
+        agingAdjustmentCalculator = new AgingAdjustmentCalculator(Constants.DEVICE_LIFESPAN,
+                Constants.SIMULATION_TIME_MEASUREMENT,
+                Constants.DEVICE_ADJUSTMENT_RATE,
+                Constants.COMPENSATION_COEFFICIENT);
     }
 
     /**
@@ -270,9 +279,6 @@ public class Environment implements Serializable {
      */
     public void tick(long ms) {
         this.clock = this.clock.plus(ms, ChronoUnit.MILLIS);
-//        this.clock= this.clock.plus(Constants.SIMULATION_TIME_MEASUREMENT);
-    }
-    public void simulationInternalClockTick(long period) {
     }
 
     public void resetClock(){
@@ -431,5 +437,8 @@ public class Environment implements Serializable {
     }
 
 
+    public AgingAdjustmentCalculator getAgingAdjustmentCalculator() {
+        return agingAdjustmentCalculator;
+    }
 }
 
