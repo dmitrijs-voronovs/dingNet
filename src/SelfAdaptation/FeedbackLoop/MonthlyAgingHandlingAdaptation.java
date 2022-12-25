@@ -9,7 +9,7 @@ import java.util.HashMap;
 
 public class MonthlyAgingHandlingAdaptation extends GenericFeedbackLoop {
     private final HashMap<Mote, LocalTime> messageDepartureTimeBuffer = new HashMap<>();
-    private final AgingCalculator agingCalculator = new AgingCalculator();
+    private final EnergyAdjustmentCalculator energyAdjustmentCalculator = new EnergyAdjustmentCalculator();
     public MonthlyAgingHandlingAdaptation(){
         super("Aging-factor-based");
     }
@@ -27,7 +27,7 @@ public class MonthlyAgingHandlingAdaptation extends GenericFeedbackLoop {
         if (isTimeForAdaptation(prevDepartureTime, lastTransmission)) {
             messageDepartureTimeBuffer.put(mote, lastTransmission.getDepartureTime());
             System.out.println("adapting mote with id " + mote.getEUI());
-            int energyAdjustment = agingCalculator.calculateEnergyToAdd(Constants.SIMULATION_BEGINNING, getCurrentSimulationTime(dataGateway), moteProbe.getAge(mote));
+            int energyAdjustment = energyAdjustmentCalculator.calculateEnergyToAdd(Constants.SIMULATION_BEGINNING, getCurrentSimulationTime(dataGateway), moteProbe.getAge(mote));
             moteEffector.setPower(mote, moteProbe.getPowerSetting(mote) + energyAdjustment);
         }
     }

@@ -12,7 +12,7 @@ enum Weather {
     HOT
 }
 
-public class AgingCalculator {
+public class EnergyAdjustmentCalculator {
     private static final float USAGE_FACTOR = 1.05f;
     private static final int DAYS_IN_MONTH = 30;
     private final Weather[] yearlyWeatherByMonth = {
