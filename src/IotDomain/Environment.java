@@ -265,11 +265,11 @@ public class Environment implements Serializable {
 
     /**
      * Increases the time with a given amount of miliseconds.
-     * @param period
+     * @param ms
      * @Post Increases the time with a given amount of miliseconds.
      */
-    public void tick(long period) {
-        this.clock = this.clock.plus(period, ChronoUnit.MILLIS);
+    public void tick(long ms) {
+        this.clock = this.clock.plus(ms, ChronoUnit.MILLIS);
 //        this.clock= this.clock.plus(Constants.SIMULATION_TIME_MEASUREMENT);
     }
     public void simulationInternalClockTick(long period) {

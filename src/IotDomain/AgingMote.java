@@ -2,6 +2,7 @@ package IotDomain;
 
 import org.jxmapviewer.viewer.GeoPosition;
 
+import java.time.Duration;
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
 import java.util.Random;
@@ -12,7 +13,7 @@ public class AgingMote extends Mote {
     public void reset() {
         super.reset();
 //        TODO: maybe reset to input config values??
-        setAge(0);
+        setAge(Duration.ZERO);
         setAgingFactor(0f);
         setTotalEnergyConsumed(0f);
         this.agingFactorHistory = new Vector<>();
@@ -38,7 +39,7 @@ public class AgingMote extends Mote {
     /**
      * Data type corresponds with the time delta for each tik of the Simulation
      */
-    protected long age = 0;
+    protected Duration age;
 
     /**
      * Increases with the age
@@ -79,21 +80,19 @@ public class AgingMote extends Mote {
         this.agingFactor = agingFactor;
     }
 
-    public long getAge() {
+    public Duration getAge() {
         return age;
     }
 
-    protected void setAge(long age) {
+    protected void setAge(Duration age) {
         this.age = age;
     }
 
-    public void increaseAgeBy(long ageDelta) {
-        System.out.println("adding age to "+ this.getEUI() + " by " + ageDelta);
-        setAge(getAge() + ageDelta);
-        setAgingFactor(getAgingFactor() + ageDelta * .1f);
+    public void increaseAge() {
+        setAge(age.plus(Constants.SIMULATION_TIME_MEASUREMENT));
     }
 
-    public AgingMote(Long DevEUI, Integer xPos, Integer yPos, Environment environment, Integer transmissionPower, Integer SF, LinkedList<MoteSensor> moteSensors, Integer energyLevel, LinkedList<GeoPosition> path, Integer samplingRate, Double movementSpeed, Integer startOffset, long initialAge, float initialTotalEnergyConsumed) {
+    public AgingMote(Long DevEUI, Integer xPos, Integer yPos, Environment environment, Integer transmissionPower, Integer SF, LinkedList<MoteSensor> moteSensors, Integer energyLevel, LinkedList<GeoPosition> path, Integer samplingRate, Double movementSpeed, Integer startOffset, Duration initialAge, float initialTotalEnergyConsumed) {
         super(DevEUI, xPos, yPos, environment, transmissionPower, SF, moteSensors, energyLevel, path, samplingRate, movementSpeed, startOffset);
         environment.addMote(this);
         setAge(initialAge);
@@ -104,7 +103,7 @@ public class AgingMote extends Mote {
 
     public AgingMote(Long DevEUI, Integer xPos, Integer yPos, Environment environment, Integer transmissionPower,
                 Integer SF, LinkedList<MoteSensor> moteSensors, Integer energyLevel, LinkedList<GeoPosition> path, Integer samplingRate, Double movementSpeed){
-        this(DevEUI,xPos,yPos, environment,transmissionPower,SF,moteSensors,energyLevel,path,samplingRate, movementSpeed, Math.abs((new Random()).nextInt(5)),0,0);
+        this(DevEUI,xPos,yPos, environment,transmissionPower,SF,moteSensors,energyLevel,path,samplingRate, movementSpeed, Math.abs((new Random()).nextInt(5)),Duration.ZERO,0);
     }
 
 //    @Override

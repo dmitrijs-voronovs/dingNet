@@ -2,6 +2,8 @@ package SelfAdaptation.Instrumentation;
 
 import IotDomain.AgingMote;
 
+import java.time.Duration;
+
 public class AgingMoteProbe extends MoteProbe {
     public float getAgingFactor(AgingMote mote) {
         return mote.getAgingFactor();
@@ -11,7 +13,7 @@ public class AgingMoteProbe extends MoteProbe {
         return mote.getTotalEnergyConsumed();
     }
 
-    public float getAge(AgingMote mote) {
+    public Duration getAge(AgingMote mote) {
         return mote.getAge();
     }
 }

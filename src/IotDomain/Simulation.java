@@ -201,8 +201,7 @@ public class Simulation implements Runnable {
 
     private void envTick() {
         environment.tick(1);
-//        TODO: remove
-        environment.getMotes().stream().filter(Mote::isEnabled).forEach(m -> m.increaseAgeBy(1));
+        environment.getMotes().stream().filter(Mote::isEnabled).forEach(AgingMote::increaseAge);
     }
 
     private void sendDataToGateway(Mote mote) {
