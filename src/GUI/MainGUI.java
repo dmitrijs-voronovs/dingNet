@@ -7,7 +7,7 @@ import SelfAdaptation.AdaptationGoals.AdaptationGoal;
 import SelfAdaptation.AdaptationGoals.IntervalAdaptationGoal;
 import SelfAdaptation.AdaptationGoals.ThresholdAdaptationGoal;
 import SelfAdaptation.FeedbackLoop.GenericFeedbackLoop;
-import SelfAdaptation.FeedbackLoop.ReliableAgingHandlingFeedbackLoop;
+import SelfAdaptation.FeedbackLoop.MonthlyAgingHandlingAdaptation;
 import SelfAdaptation.FeedbackLoop.ReliableEfficientDistanceGateway;
 import SelfAdaptation.FeedbackLoop.ReliableEfficientSignalGateway;
 import SelfAdaptation.Instrumentation.AgingMoteProbe;
@@ -174,8 +174,8 @@ public class MainGUI extends JFrame {
         ReliableEfficientDistanceGateway reliableEfficientDistanceGateway = new ReliableEfficientDistanceGateway();
         algorithms.add(reliableEfficientDistanceGateway);
 
-        ReliableAgingHandlingFeedbackLoop reliableAgingHandlingFeedbackLoop = new ReliableAgingHandlingFeedbackLoop();
-        algorithms.add(reliableAgingHandlingFeedbackLoop);
+        MonthlyAgingHandlingAdaptation monthlyAgingHandlingAdaptation = new MonthlyAgingHandlingAdaptation();
+        algorithms.add(monthlyAgingHandlingAdaptation);
 
         /**
          * Setting the mote probes
