@@ -51,6 +51,7 @@ public class AgingMote extends Mote {
     }
 
     protected void updateAgingFactoryHistory() {
+//        TODO: check
         try {
             this.agingFactorHistory.lastElement().add(getAgingFactor());
         } catch (NoSuchElementException e) {
