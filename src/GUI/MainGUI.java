@@ -2551,7 +2551,7 @@ public class MainGUI extends JFrame {
 
         JFreeChart chart = ChartFactory.createXYLineChart(
                 null, // chart title
-                "Seconds", // x axis label
+                "Transmissions", // x axis label
                 "Aging factor", // y axis label
                 data, // data
                 PlotOrientation.VERTICAL,
@@ -2592,9 +2592,9 @@ public class MainGUI extends JFrame {
                 false // urls
         );
         XYPlot plot = (XYPlot) powerSettingChartMote.getPlot();
-        NumberAxis range = (NumberAxis) plot.getRangeAxis();
-        range.setRange(0.0, 15.0);
-        range.setTickUnit(new NumberTickUnit(1.0));
+//        NumberAxis range = (NumberAxis) plot.getRangeAxis();
+//        range.setRange(0.0, 15.0);
+//        range.setTickUnit(new NumberTickUnit(1.0));
         return new ChartPanel(powerSettingChartMote);
 
     }

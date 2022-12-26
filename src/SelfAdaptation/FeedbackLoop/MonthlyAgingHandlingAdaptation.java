@@ -17,7 +17,6 @@ public class MonthlyAgingHandlingAdaptation extends GenericFeedbackLoop {
 
     @Override
     public void adapt(AgingMote mote, Gateway dataGateway){
-        System.out.println("trying to adapt");
         LoraTransmission lastTransmission = getLastTransmission(dataGateway);
         LocalTime prevDepartureTime = messageDepartureTimeBuffer.get(mote);
 
@@ -28,7 +27,6 @@ public class MonthlyAgingHandlingAdaptation extends GenericFeedbackLoop {
 
         if (isTimeForAdaptation(prevDepartureTime, lastTransmission)) {
             messageDepartureTimeBuffer.put(mote, lastTransmission.getDepartureTime());
-            System.out.println("adapting mote with id " + mote.getEUI());
             int energyAdjustment = energyAdjustmentCalculator.calculateEnergyToAdd(Constants.SIMULATION_BEGINNING, getCurrentSimulationTime(dataGateway), moteProbe.getAge(mote));
             moteEffector.setPower(mote, moteProbe.getPowerSetting(mote) + energyAdjustment);
             moteEffector.addAgingFactor(mote, dataGateway.getEnvironment().getAgingAdjustmentCalculator().getAgingFactorAdjustment());
@@ -36,14 +34,18 @@ public class MonthlyAgingHandlingAdaptation extends GenericFeedbackLoop {
     }
 
     private boolean isTimeForAdaptation(LocalTime prevDepartureTime, LoraTransmission lastTransmission) {
-        long prevDepartureTimeMs = TimeHelper.localTimeToMillis(prevDepartureTime) * Constants.SIMULATION_TIME_MEASUREMENT.toMillis();
+        long prevDepartureTimeMs = getAdjustedTimeMs(prevDepartureTime);
         long timeForAdaptation = prevDepartureTimeMs + Constants.DEVICE_ADJUSTMENT_RATE.toMillis();
-        long lastTransmissionDepartureTimeMs = TimeHelper.localTimeToMillis(lastTransmission.getDepartureTime()) * Constants.SIMULATION_TIME_MEASUREMENT.toMillis();
+        long lastTransmissionDepartureTimeMs = getAdjustedTimeMs(lastTransmission.getDepartureTime());
         return lastTransmissionDepartureTimeMs >= timeForAdaptation;
     }
 
     private static Duration getCurrentSimulationTime(Gateway dataGateway) {
-        return Duration.ofMillis(TimeHelper.localTimeToMillis(dataGateway.getEnvironment().getTime()));
+        return Duration.ofMillis(getAdjustedTimeMs(dataGateway.getEnvironment().getTime()));
+    }
+
+    private static long getAdjustedTimeMs(LocalTime time) {
+        return TimeHelper.localTimeToMillis(time) * Constants.SIMULATION_TIME_STEP.toMillis();
     }
 
     private static LoraTransmission getLastTransmission(Gateway dataGateway) {
