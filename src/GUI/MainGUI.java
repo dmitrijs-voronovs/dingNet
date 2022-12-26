@@ -2576,7 +2576,7 @@ public class MainGUI extends JFrame {
     public static ChartPanel generatePowerSettingGraph(NetworkEntity mote, Integer run) {
         XYSeriesCollection dataPowerSettingMote = new XYSeriesCollection();
         XYSeries seriesPowerSettingMote = new XYSeries("Power setting");
-        for (Pair<Integer, Integer> powerSetting : mote.getPowerSettingHistory(run)) {
+        for (Pair<Integer, Double> powerSetting : mote.getPowerSettingHistory(run)) {
             seriesPowerSettingMote.add(powerSetting.getLeft(), powerSetting.getRight());
         }
         dataPowerSettingMote.addSeries(seriesPowerSettingMote);
