@@ -9,9 +9,9 @@ public class Constants {
      */
     public static final Duration DEVICE_ADJUSTMENT_RATE = Duration.ofDays(30);
     public static final Calendar SIMULATION_BEGINNING;
-    public static final float COMPENSATION_COEFFICIENT = 1f;
+    public static final float COMPENSATION_COEFFICIENT = .95f;
     public static final Duration DEVICE_LIFESPAN = Duration.ofDays(365 * 20);
-    public static final Duration SIMULATION_TIME_STEP = Duration.ofHours(1);
+    public static final Duration SIMULATION_TIME_STEP = Duration.ofMinutes(15);
     public static final float AGING_ADJUSTMENT_MULTIPLIER = 1f;
 
 
