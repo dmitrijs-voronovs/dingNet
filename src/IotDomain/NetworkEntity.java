@@ -29,7 +29,7 @@ public abstract class NetworkEntity implements Serializable{
     /**
      * A list representing the power setting of every transmission.
      */
-    private LinkedList<List<Pair<Integer,Integer>>> powerSettingHistory;
+    private LinkedList<List<Pair<Integer,Double>>> powerSettingHistory;
     /**
      * A list representing the spreading factor of every transmission.
      */
@@ -53,7 +53,7 @@ public abstract class NetworkEntity implements Serializable{
     /**
      * The transmission power of the entity.
      */
-    private Integer transmissionPower;
+    private double transmissionPower;
     /**
      * The levels of power in between which it can discriminate.
      */
@@ -141,7 +141,7 @@ public abstract class NetworkEntity implements Serializable{
      * Return the power setting history of the entity.
      * @return The power setting history of the entity.
      */
-    public List<Pair<Integer,Integer>> getPowerSettingHistory(Integer run) {
+    public List<Pair<Integer,Double>> getPowerSettingHistory(Integer run) {
         return powerSettingHistory.get(run);
     }
 
@@ -198,6 +198,14 @@ public abstract class NetworkEntity implements Serializable{
         this.transmissionPower = transmissionPower;
     }
 
+    public void setTransmissionPower(double transmissionPower) {
+        this.transmissionPower = transmissionPower;
+    }
+
+    public void addTransmissionPower(double transmissionPower) {
+        this.transmissionPower += transmissionPower;
+    }
+
     /**
      *  Returns The transmission power of the entity.
      * @return The transmission power of the entity.
@@ -205,6 +213,10 @@ public abstract class NetworkEntity implements Serializable{
     
     
     public Integer getTransmissionPower() {
+        return (int) transmissionPower;
+    }
+
+    public double getPreciseTransmissionPower() {
         return transmissionPower;
     }
 
@@ -378,7 +390,7 @@ public abstract class NetworkEntity implements Serializable{
     protected void loraSend(LoraWanPacket message){
         if(!isTransmitting) {
             LinkedList<LoraTransmission> packetsToSend = new LinkedList<>();
-            powerSettingHistory.getLast().add(new Pair<>(getEnvironment().getTime().toSecondOfDay(),getTransmissionPower()));
+            powerSettingHistory.getLast().add(new Pair<>(getEnvironment().getTime().toSecondOfDay(),getPreciseTransmissionPower()));
             spreadingFactorHistory.getLast().add(getSF());
             for (Gateway gateway : getEnvironment().getGateways()) {
                 if (gateway != this)

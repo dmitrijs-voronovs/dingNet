@@ -33,7 +33,7 @@ public class EnergyAdjustmentCalculator {
         this.agingAdjustmentMultiplier = agingAdjustmentMultiplier;
     }
 
-    public int calculateEnergyToAdd(Calendar simulationBeginning, Duration currentTime, Duration moteAge) {
+    public double calculateEnergyToAdd(Calendar simulationBeginning, Duration currentTime, Duration moteAge) {
         Calendar adaptationTime = getAdaptationTime(simulationBeginning, currentTime);
         int moteAgeInMoths = (int) Math.floor(moteAge.toDays() / DAYS_IN_MONTH);
         if (moteAgeInMoths == 0) return 0;
@@ -42,7 +42,7 @@ public class EnergyAdjustmentCalculator {
 //        double energyDelta = calculateDelta(moteAgeInMoths, monthOfYear) - calculateDelta(moteAgeInMoths - 1, Math.floorMod(monthOfYear - 1, 12));
 //        TODO: should we compare months with the same temperature?
         double energyDelta = calculateDelta(moteAgeInMoths, monthOfYear) - calculateDelta(moteAgeInMoths - 1, monthOfYear);
-        return (int) Math.ceil(agingAdjustmentMultiplier * energyDelta);
+        return agingAdjustmentMultiplier * energyDelta;
     }
 
     private static Calendar getAdaptationTime(Calendar simulationBeginning, Duration currentTime) {
