@@ -29,7 +29,7 @@ public class MonthlyAgingHandlingAdaptation extends GenericFeedbackLoop {
             messageDepartureTimeBuffer.put(mote, lastTransmission.getDepartureTime());
             double energyAdjustment = energyAdjustmentCalculator.calculateEnergyToAdd(Constants.SIMULATION_BEGINNING, getCurrentSimulationTime(dataGateway), moteProbe.getAge(mote));
             moteEffector.addPower(mote, energyAdjustment);
-            moteEffector.addAgingFactor(mote, dataGateway.getEnvironment().getAgingAdjustmentCalculator().getAgingFactorAdjustment());
+            moteEffector.addAgingFactor(mote, dataGateway.getEnvironment().getAgingAdjustmentCalculator().getAgingFactorAdjustment(Constants.DEVICE_ADJUSTMENT_RATE));
         }
     }
 

@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.stream.Stream;
 
 /**
  * A class representing a simulation.
@@ -102,10 +103,7 @@ public class Simulation implements Runnable {
      * @param speed
      */
     public void singleRun(Integer speed) {
-        //Check if a mote can participate in this run.
-        enableMotes();
-        // reset the environment.
-        getEnvironment().reset();
+        prepareSimulation();
 
         boolean arrived = true;
         HashMap<AgingMote,Integer> waypoinMap = new HashMap<>();
@@ -199,10 +197,25 @@ public class Simulation implements Runnable {
         }
     }
 
+    private void prepareSimulation() {
+        // reset the environment.
+        getEnvironment().reset();
+        //Check if a mote can participate in this run.
+        enableMotes();
+    }
+
     private void envTick() {
         environment.tick(1);
-        environment.getMotes().stream().filter(Mote::isEnabled).forEach(AgingMote::increaseAge);
-        environment.getMotes().stream().filter(Mote::isEnabled).forEach(m -> m.addAgingFactor(getEnvironment().getAgingAdjustmentCalculator().getAgingFactorUnit()));
+        increaseMotesAge();
+    }
+
+    private void increaseMotesAge() {
+        getActiveMotesStream().forEach(AgingMote::increaseAge);
+        getActiveMotesStream().forEach(m -> m.addAgingFactor(getEnvironment().getAgingAdjustmentCalculator().getAgingFactorUnit()));
+    }
+
+    private Stream<AgingMote> getActiveMotesStream() {
+        return environment.getMotes().stream().filter(Mote::isEnabled);
     }
 
     private void sendDataToGateway(Mote mote) {
@@ -232,11 +245,7 @@ public class Simulation implements Runnable {
      * A method for running the simulation as described in the inputProfile.
      */
     public void run(){
-
-        getEnvironment().reset();
-
-        enableMotes();
-
+        prepareSimulation();
 
         for(int i =0; i< getInputProfile().getNumberOfRuns();i++) {
 
