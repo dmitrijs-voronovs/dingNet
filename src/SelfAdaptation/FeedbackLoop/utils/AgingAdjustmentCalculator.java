@@ -30,6 +30,17 @@ public class AgingAdjustmentCalculator {
         return - getAgingFactor(period) * compensationCoefficient;
     }
 
+    /**
+     * Calculate aging factor for aging motes with initial age > 0
+     * @param period functioning period (initial age)
+     * @param isCompensated was aging adaptation used during that period
+     * @return aging factor for initial age
+     */
+    public float getAgingFactorAfterAdjustments(Duration period, boolean isCompensated) {
+        if (!isCompensated) return getAgingFactor(period);
+        return getAgingFactor(period) + getAgingFactorAdjustment(period);
+    }
+
     private float totalUnitsPerPeriod(Duration period) {
         return (float) period.toNanos() / timeMeasurement.toNanos();
     }
