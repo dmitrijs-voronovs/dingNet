@@ -4,7 +4,6 @@ import org.jxmapviewer.viewer.GeoPosition;
 
 import java.time.Duration;
 import java.util.LinkedList;
-import java.util.NoSuchElementException;
 import java.util.Random;
 import java.util.Vector;
 
@@ -18,6 +17,7 @@ public class AgingMote extends Mote {
         setTotalEnergyConsumed(0f);
         this.agingFactorHistory = new Vector<>();
         this.agingFactorHistory.add(new Vector<>());
+        this.updateAgingFactoryHistory();
     }
 
     @Override
@@ -50,15 +50,10 @@ public class AgingMote extends Mote {
     }
 
     protected void updateAgingFactoryHistory() {
-//        TODO: check
-        try {
-            this.agingFactorHistory.lastElement().add(getAgingFactor());
-        } catch (NoSuchElementException e) {
-            this.agingFactorHistory.lastElement().add(getAgingFactor());
-        }
+        this.agingFactorHistory.lastElement().add(getAgingFactor());
     }
 
-    protected Vector<Vector<Float>> agingFactorHistory = new Vector<>(new Vector<>());
+    protected Vector<Vector<Float>> agingFactorHistory;
 
     protected float totalEnergyConsumed = 0;
 
@@ -75,9 +70,7 @@ public class AgingMote extends Mote {
     }
 
     public void setAgingFactor(float agingFactor) {
-        System.out.println("current aging factor " + agingFactor);
         this.agingFactor = Math.max(Math.min(agingFactor, 1), 0);
-        System.out.println("new aging factor " + Math.max(Math.min(agingFactor, 1), 0));
     }
 
     public void addAgingFactor(float agingFactor) {
@@ -93,8 +86,7 @@ public class AgingMote extends Mote {
     }
 
     public void increaseAge() {
-        System.out.println("increasing age");
-        setAge(age.plus(Constants.SIMULATION_TIME_MEASUREMENT));
+        setAge(age.plus(Constants.SIMULATION_TIME_STEP));
     }
 
     public AgingMote(Long DevEUI, Integer xPos, Integer yPos, Environment environment, Integer transmissionPower, Integer SF, LinkedList<MoteSensor> moteSensors, Integer energyLevel, LinkedList<GeoPosition> path, Integer samplingRate, Double movementSpeed, Integer startOffset, Duration initialAge, float initialTotalEnergyConsumed) {

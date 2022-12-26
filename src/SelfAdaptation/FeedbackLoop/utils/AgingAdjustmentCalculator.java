@@ -18,7 +18,7 @@ public class AgingAdjustmentCalculator {
     }
 
     private void computeAgingFactorUnit() {
-        this.agingFactorUnit = (float)  timeMeasurement.toNanos() / deviceLifespan.toNanos() * compensationCoefficient;
+        this.agingFactorUnit = (float) timeMeasurement.toNanos() / deviceLifespan.toNanos();
     }
 
 
@@ -27,7 +27,7 @@ public class AgingAdjustmentCalculator {
     }
 
     public float getAgingFactorAdjustment() {
-        float adjustmentsPerAdaptationCycle= deviceAdjustmentRate.toNanos() / timeMeasurement.toNanos();
-        return - getAgingFactorUnit() * adjustmentsPerAdaptationCycle;
+        float adjustmentsPerAdaptationCycle = (float) deviceAdjustmentRate.toNanos() / timeMeasurement.toNanos();
+        return - getAgingFactorUnit() * adjustmentsPerAdaptationCycle * compensationCoefficient;
     }
 }

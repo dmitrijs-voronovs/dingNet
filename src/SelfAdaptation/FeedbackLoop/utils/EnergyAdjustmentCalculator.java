@@ -3,14 +3,13 @@ package SelfAdaptation.FeedbackLoop.utils;
 import java.time.Duration;
 import java.util.Calendar;
 
-enum Weather {
-    COLD,
-    CHILL,
-    WARM,
-    HOT
-}
-
 public class EnergyAdjustmentCalculator {
+    private enum Weather {
+        COLD,
+        CHILL,
+        WARM,
+        HOT
+    }
     private static final float USAGE_FACTOR = 1.05f;
     public static final int DAYS_IN_MONTH = 30;
     private final Weather[] yearlyWeatherByMonth = {
@@ -59,7 +58,7 @@ public class EnergyAdjustmentCalculator {
     }
 
     private double calculateEnergyDeltaForMonth(int monthOfYearIdx) {
-        return 1 + 0.595 * (1 - Math.pow(Math.E, -((double)monthOfYearIdx/6517)));
+        return 1 + 0.595 * (1 - Math.pow(Math.E, -(monthOfYearIdx/6.517)));
     }
 
     /**
