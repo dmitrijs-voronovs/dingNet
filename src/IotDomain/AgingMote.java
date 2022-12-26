@@ -12,18 +12,23 @@ public class AgingMote extends Mote {
     public void reset() {
         super.reset();
 //        TODO: maybe reset to input config values??
-        setAge(Duration.ZERO);
-        setAgingFactor(0f);
+        updateAge();
         setTotalEnergyConsumed(0f);
         this.agingFactorHistory = new Vector<>();
         this.agingFactorHistory.add(new Vector<>());
-        this.updateAgingFactoryHistory();
     }
 
     @Override
     public void addRun() {
         super.addRun();
         this.agingFactorHistory.add(new Vector<>());
+        updateAge();
+    }
+
+//    TODO: with input profile values
+    protected void updateAge() {
+        setAgingFactor(0);
+        setAge(Duration.ZERO);
     }
 
     @Override

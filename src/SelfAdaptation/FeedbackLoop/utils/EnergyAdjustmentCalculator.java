@@ -27,10 +27,10 @@ public class EnergyAdjustmentCalculator {
             Weather.COLD, //Dec
 
     };
-    private final float agingAdjustmentMultiplier;
+    private final float energyAdjustmentMultiplier;
 
-    public EnergyAdjustmentCalculator(float agingAdjustmentMultiplier) {
-        this.agingAdjustmentMultiplier = agingAdjustmentMultiplier;
+    public EnergyAdjustmentCalculator(float energyAdjustmentMultiplier) {
+        this.energyAdjustmentMultiplier = energyAdjustmentMultiplier;
     }
 
     public double calculateEnergyToAdd(Calendar simulationBeginning, Duration currentTime, Duration moteAge) {
@@ -42,7 +42,7 @@ public class EnergyAdjustmentCalculator {
 //        double energyDelta = calculateDelta(moteAgeInMoths, monthOfYear) - calculateDelta(moteAgeInMoths - 1, Math.floorMod(monthOfYear - 1, 12));
 //        TODO: should we compare months with the same temperature?
         double energyDelta = calculateDelta(moteAgeInMoths, monthOfYear) - calculateDelta(moteAgeInMoths - 1, monthOfYear);
-        return agingAdjustmentMultiplier * energyDelta;
+        return energyAdjustmentMultiplier * energyDelta;
     }
 
     private static Calendar getAdaptationTime(Calendar simulationBeginning, Duration currentTime) {

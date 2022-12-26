@@ -96,7 +96,6 @@ public class Environment implements Serializable {
         numberOfRuns = 1;
         agingAdjustmentCalculator = new AgingAdjustmentCalculator(Constants.DEVICE_LIFESPAN,
                 Constants.SIMULATION_TIME_STEP,
-                Constants.DEVICE_ADJUSTMENT_RATE,
                 Constants.COMPENSATION_COEFFICIENT);
     }
 
