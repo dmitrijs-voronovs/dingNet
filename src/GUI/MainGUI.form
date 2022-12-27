@@ -200,7 +200,14 @@
                       <foreground color="-12828863"/>
                     </properties>
                     <border type="none"/>
-                    <children/>
+                    <children>
+                      <grid id="8dfa7" layout-manager="BorderLayout" hgap="0" vgap="0">
+                        <constraints border-constraint="West"/>
+                        <properties/>
+                        <border type="none"/>
+                        <children/>
+                      </grid>
+                    </children>
                   </grid>
                   <vspacer id="28084">
                     <constraints>
@@ -591,6 +598,14 @@
                                     <border type="none"/>
                                     <children/>
                                   </grid>
+                                  <grid id="baa22" binding="ageingFactorGraph" layout-manager="BorderLayout" hgap="0" vgap="0">
+                                    <constraints>
+                                      <tabbedpane title="Aging Factor"/>
+                                    </constraints>
+                                    <properties/>
+                                    <border type="none"/>
+                                    <children/>
+                                  </grid>
                                 </children>
                               </tabbedpane>
                               <toolbar id="45048">
@@ -820,7 +835,7 @@
                         <constraints/>
                         <properties>
                           <majorTickSpacing value="3"/>
-                          <maximum value="5"/>
+                          <maximum value="10"/>
                           <minimum value="1"/>
                           <minorTickSpacing value="1"/>
                           <paintLabels value="false"/>

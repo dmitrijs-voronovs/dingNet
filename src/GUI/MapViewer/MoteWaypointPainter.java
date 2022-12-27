@@ -4,10 +4,14 @@ import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.Set;
+import java.util.stream.Collectors;
 
+import IotDomain.AgingMote;
 import org.jxmapviewer.JXMapViewer;
 import org.jxmapviewer.painter.AbstractPainter;
+import org.jxmapviewer.viewer.GeoPosition;
 import org.jxmapviewer.viewer.Waypoint;
 import org.jxmapviewer.viewer.WaypointRenderer;
 
@@ -21,6 +25,7 @@ public class MoteWaypointPainter<W extends Waypoint> extends AbstractPainter<JXM
 {
     private WaypointRenderer<? super W> renderer = new MoteWaypointRenderer();
     private Set<W> waypoints = new HashSet<W>();
+    private LinkedList<AgingMote> motes = new LinkedList<AgingMote>();
 
     /**
      * Creates a new instance of WaypointPainter
@@ -57,6 +62,15 @@ public class MoteWaypointPainter<W extends Waypoint> extends AbstractPainter<JXM
     {
         this.waypoints.clear();
         this.waypoints.addAll(waypoints);
+        this.motes.clear();
+    }
+
+    public void setWaypoints(Set<? extends W> waypoints, LinkedList<AgingMote> motes)
+    {
+        this.waypoints.clear();
+        this.waypoints.addAll(waypoints);
+        this.motes.clear();
+        this.motes.addAll(motes);
     }
 
     @Override
@@ -73,7 +87,16 @@ public class MoteWaypointPainter<W extends Waypoint> extends AbstractPainter<JXM
 
         for (W w : getWaypoints())
         {
-            renderer.paintWaypoint(g, map, w);
+            AgingMote mote = motes.stream().filter(currentMote -> new GeoPosition(currentMote.getEnvironment().toLatitude(currentMote.getYPos()),
+                            currentMote.getEnvironment().toLongitude(currentMote.getXPos())).equals(w.getPosition()))
+                    .toList()
+                    .get(0);
+
+            if(renderer instanceof MoteWaypointRenderer && mote != null) {
+                ((MoteWaypointRenderer) renderer).paintWaypoint(g, map, w, mote.getAgingFactor());
+            } else {
+                renderer.paintWaypoint(g, map, w);
+            }
         }
 
         g.translate(viewportBounds.getX(), viewportBounds.getY());

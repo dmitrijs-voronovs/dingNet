@@ -22,6 +22,14 @@ public class MoteEffector {
         mote.setTransmissionPower(power);
     }
 
+    public void setPower(Mote mote, float power){
+        mote.setTransmissionPower(power);
+    }
+
+    public void addPower(Mote mote, double power){
+        mote.addTransmissionPower(power);
+    }
+
     /**
      * A method to set the spreading factor of a mote.
      * @param mote The mote to set the spreading factor of.

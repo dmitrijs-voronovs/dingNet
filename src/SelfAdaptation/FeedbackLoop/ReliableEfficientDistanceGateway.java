@@ -1,5 +1,6 @@
 package SelfAdaptation.FeedbackLoop;
 
+import IotDomain.AgingMote;
 import IotDomain.Gateway;
 import IotDomain.LoraTransmission;
 import IotDomain.Mote;
@@ -61,7 +62,8 @@ public class ReliableEfficientDistanceGateway extends GenericFeedbackLoop {
     
     private FeedbackLoopGatewayBuffer gatewayBuffer;
 
-    public void adapt(Mote mote, Gateway dataGateway){
+    @Override
+    public void adapt(AgingMote mote, Gateway dataGateway){
         /**
          First we check if we have received the message already from all gateways.
          */

@@ -7,10 +7,14 @@ import SelfAdaptation.AdaptationGoals.AdaptationGoal;
 import SelfAdaptation.AdaptationGoals.IntervalAdaptationGoal;
 import SelfAdaptation.AdaptationGoals.ThresholdAdaptationGoal;
 import SelfAdaptation.FeedbackLoop.GenericFeedbackLoop;
+import SelfAdaptation.FeedbackLoop.MonthlyAgingHandlingAdaptation;
 import SelfAdaptation.FeedbackLoop.ReliableEfficientDistanceGateway;
 import SelfAdaptation.FeedbackLoop.ReliableEfficientSignalGateway;
-import SelfAdaptation.Instrumentation.MoteEffector;
-import SelfAdaptation.Instrumentation.MoteProbe;
+import SelfAdaptation.Instrumentation.AgingMoteEffector;
+import SelfAdaptation.Instrumentation.AgingMoteProbe;
+import com.intellij.uiDesigner.core.GridConstraints;
+import com.intellij.uiDesigner.core.GridLayoutManager;
+import com.intellij.uiDesigner.core.Spacer;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -65,6 +69,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.*;
+import java.util.stream.IntStream;
 
 public class MainGUI extends JFrame {
     private JPanel map;
@@ -100,6 +105,7 @@ public class MainGUI extends JFrame {
     private JPanel ozonePanel;
     private JProgressBar totalRunProgressBar;
     private JPanel distanceToGatewayGraph;
+    private JPanel ageingFactorGraph;
     private JPanel InputProfilePanel;
     private JLabel progressLabel;
     private JButton singleRunButton;
@@ -121,15 +127,16 @@ public class MainGUI extends JFrame {
     private static TileFactoryInfo info = new OSMTileFactoryInfo();
     private static DefaultTileFactory tileFactory = new DefaultTileFactory(info);
 
-    private static LinkedList<InputProfile> inputProfiles;
+    private static LinkedList<AgingInputProfile> inputProfiles;
     private static Simulation simulation;
     private static LinkedList<GenericFeedbackLoop> algorithms = new LinkedList<>();
-    private LinkedList<MoteProbe> moteProbe;
-    private LinkedList<MoteEffector> moteEffector;
+    private LinkedList<AgingMoteProbe> moteProbe;
+    private LinkedList<AgingMoteEffector> moteEffector;
     private QualityOfService QoS = new QualityOfService(new HashMap<>());
     private Double usedEnergy;
     private Integer packetsSent;
     private Integer packetsLost;
+    private Integer selectedRun = 0;
 
 
     public MainGUI() {
@@ -146,7 +153,7 @@ public class MainGUI extends JFrame {
 
 
         simulation = new Simulation(this);
-        inputProfiles = loadInputProfiles();
+        inputProfiles = loadInputProfilesFromFile();
         updateInputProfile(inputProfiles);
         updateAdaptationGoals();
 
@@ -155,7 +162,7 @@ public class MainGUI extends JFrame {
          */
         GenericFeedbackLoop noAdaptation = new GenericFeedbackLoop("No Adaptation") {
             @Override
-            public void adapt(Mote mote, Gateway gateway) {
+            public void adapt(AgingMote mote, Gateway gateway) {
 
             }
         };
@@ -167,6 +174,8 @@ public class MainGUI extends JFrame {
         ReliableEfficientDistanceGateway reliableEfficientDistanceGateway = new ReliableEfficientDistanceGateway();
         algorithms.add(reliableEfficientDistanceGateway);
 
+        MonthlyAgingHandlingAdaptation monthlyAgingHandlingAdaptation = new MonthlyAgingHandlingAdaptation();
+        algorithms.add(monthlyAgingHandlingAdaptation);
 
         /**
          * Setting the mote probes
@@ -174,8 +183,8 @@ public class MainGUI extends JFrame {
         moteProbe = new LinkedList<>();
         moteEffector = new LinkedList<>();
         for (int i = 0; i < algorithms.size(); i++) {
-            moteProbe.add(new MoteProbe());
-            moteEffector.add(new MoteEffector());
+            moteProbe.add(new AgingMoteProbe());
+            moteEffector.add(new AgingMoteEffector());
         }
         for (GenericFeedbackLoop feedbackLoop : algorithms) {
             feedbackLoop.setMoteProbe(moteProbe.get(algorithms.indexOf(feedbackLoop)));
@@ -221,16 +230,16 @@ public class MainGUI extends JFrame {
                         Element wayPoints = (Element) configuration.getElementsByTagName("wayPoints").item(0);
                         Element region = (Element) map.getElementsByTagName("region").item(0);
                         Element origin = (Element) region.getElementsByTagName("origin").item(0);
-                        GeoPosition mapOrigin = new GeoPosition(Double.valueOf(origin.getElementsByTagName("latitude").item(0).getTextContent())
-                                , Double.valueOf(origin.getElementsByTagName("longitude").item(0).getTextContent()));
-                        Integer width = Integer.valueOf(region.getElementsByTagName("width").item(0).getTextContent());
-                        Integer height = Integer.valueOf(region.getElementsByTagName("height").item(0).getTextContent());
+                        GeoPosition mapOrigin = new GeoPosition(Double.valueOf(getTagValue(origin, "latitude"))
+                                , Double.valueOf(getTagValue(origin, "longitude")));
+                        Integer width = Integer.valueOf(getTagValue(region, "width"));
+                        Integer height = Integer.valueOf(getTagValue(region, "height"));
                         Integer numberOfZones = Integer.valueOf(((Element) characteristics.getElementsByTagName("regionProperty").item(0)).getAttribute("numberOfZones"));
 
                         Characteristic[][] characteristicsMap = new Characteristic[width][height];
                         for (int j = 0; j < Math.round(Math.sqrt(numberOfZones)); j++) {
                             int i = 0;
-                            for (String characteristicName : characteristics.getElementsByTagName("row").item(j).getTextContent().split("-")) {
+                            for (String characteristicName : getTagValue(characteristics, "row", j).split("-")) {
                                 Characteristic characteristic = Characteristic.valueOf(characteristicName);
                                 for (int x = (int) Math.round(i * ((double) width) / Math.round(Math.sqrt(numberOfZones)));
                                      x < (int) Math.round((i + 1) * ((double) width) / Math.round(Math.sqrt(numberOfZones))); x++) {
@@ -260,15 +269,15 @@ public class MainGUI extends JFrame {
 
                         for (int i = 0; i < motes.getElementsByTagName("mote").getLength(); i++) {
                             moteNode = (Element) motes.getElementsByTagName("mote").item(i);
-                            Long devEUI = Long.parseUnsignedLong(moteNode.getElementsByTagName("devEUI").item(0).getTextContent());
+                            Long devEUI = Long.parseUnsignedLong(getTagValue(moteNode, "devEUI"));
                             Element location = (Element) moteNode.getElementsByTagName("location").item(0);
-                            Integer xPos = Integer.valueOf(location.getElementsByTagName("xPos").item(0).getTextContent());
-                            Integer yPos = Integer.valueOf(location.getElementsByTagName("yPos").item(0).getTextContent());
-                            Integer transmissionPower = Integer.valueOf(moteNode.getElementsByTagName("transmissionPower").item(0).getTextContent());
-                            Integer spreadingFactor = Integer.valueOf(moteNode.getElementsByTagName("spreadingFactor").item(0).getTextContent());
-                            Integer energyLevel = Integer.valueOf(moteNode.getElementsByTagName("energyLevel").item(0).getTextContent());
-                            Integer samplingRate = Integer.valueOf(moteNode.getElementsByTagName("samplingRate").item(0).getTextContent());
-                            Double movementSpeed = Double.valueOf(moteNode.getElementsByTagName("movementSpeed").item(0).getTextContent());
+                            Integer xPos = Integer.valueOf(getTagValue(location, "xPos"));
+                            Integer yPos = Integer.valueOf(getTagValue(location, "yPos"));
+                            Integer transmissionPower = Integer.valueOf(getTagValue(moteNode, "transmissionPower"));
+                            Integer spreadingFactor = Integer.valueOf(getTagValue(moteNode, "spreadingFactor"));
+                            Integer energyLevel = Integer.valueOf(getTagValue(moteNode, "energyLevel"));
+                            Integer samplingRate = Integer.valueOf(getTagValue(moteNode, "samplingRate"));
+                            Double movementSpeed = Double.valueOf(getTagValue(moteNode, "movementSpeed"));
                             Element sensors = (Element) moteNode.getElementsByTagName("sensors").item(0);
                             Element sensornode = (Element) sensors.getElementsByTagName("sensor").item(0);
                             LinkedList<MoteSensor> moteSensors = new LinkedList<>();
@@ -285,19 +294,19 @@ public class MainGUI extends JFrame {
                                 Integer wayPointY = Integer.valueOf(waypoint.getTextContent().split(",")[1]);
                                 path.add(new GeoPosition(simulation.getEnvironment().toLatitude(wayPointY), simulation.getEnvironment().toLongitude(wayPointX)));
                             }
-                            new Mote(devEUI, xPos, yPos, simulation.getEnvironment(), transmissionPower, spreadingFactor, moteSensors, energyLevel, path, samplingRate, movementSpeed);
+                            new AgingMote(devEUI, xPos, yPos, simulation.getEnvironment(), transmissionPower, spreadingFactor, moteSensors, energyLevel, path, samplingRate, movementSpeed);
                         }
 
                         Element gatewayNode;
 
                         for (int i = 0; i < gateways.getElementsByTagName("gateway").getLength(); i++) {
                             gatewayNode = (Element) gateways.getElementsByTagName("gateway").item(i);
-                            Long devEUI = Long.parseUnsignedLong(gatewayNode.getElementsByTagName("devEUI").item(0).getTextContent());
+                            Long devEUI = Long.parseUnsignedLong(getTagValue(gatewayNode, "devEUI"));
                             Element location = (Element) gatewayNode.getElementsByTagName("location").item(0);
-                            Integer xPos = Integer.valueOf(location.getElementsByTagName("xPos").item(0).getTextContent());
-                            Integer yPos = Integer.valueOf(location.getElementsByTagName("yPos").item(0).getTextContent());
-                            Integer transmissionPower = Integer.valueOf(gatewayNode.getElementsByTagName("transmissionPower").item(0).getTextContent());
-                            Integer spreadingFactor = Integer.valueOf(gatewayNode.getElementsByTagName("spreadingFactor").item(0).getTextContent());
+                            Integer xPos = Integer.valueOf(getTagValue(location, "xPos"));
+                            Integer yPos = Integer.valueOf(getTagValue(location, "yPos"));
+                            Integer transmissionPower = Integer.valueOf(getTagValue(gatewayNode, "transmissionPower"));
+                            Integer spreadingFactor = Integer.valueOf(getTagValue(gatewayNode, "spreadingFactor"));
                             new Gateway(devEUI, xPos, yPos, simulation.getEnvironment(), transmissionPower, spreadingFactor);
                         }
 
@@ -552,6 +561,10 @@ public class MainGUI extends JFrame {
                 distanceToGatewayGraph.removeAll();
                 distanceToGatewayGraph.repaint();
                 distanceToGatewayGraph.revalidate();
+                // update age graph
+                ageingFactorGraph.removeAll();
+                ageingFactorGraph.repaint();
+                ageingFactorGraph.revalidate();
 
                 moteApplicationLabel.setText("");
 
@@ -859,7 +872,7 @@ public class MainGUI extends JFrame {
         entitesPanel.revalidate();
     }
 
-    private LinkedList<InputProfile> getInputProfiles() {
+    private LinkedList<AgingInputProfile> getInputProfiles() {
         return inputProfiles;
     }
 
@@ -901,45 +914,15 @@ public class MainGUI extends JFrame {
 
     }
 
-    private LinkedList<InputProfile> loadInputProfiles() {
-        LinkedList<InputProfile> inputProfiles = new LinkedList<>();
+    private LinkedList<AgingInputProfile> loadInputProfilesFromFile() {
+        LinkedList<AgingInputProfile> inputProfiles = new LinkedList<>();
         try {
             File file = new File(MainGUI.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
             file = new File(file.getParent() + "/inputProfiles/inputProfile.xml");
             DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
             DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
             Document doc = docBuilder.parse(file);
-            Element inputProfilesElement = doc.getDocumentElement();
-            for (int i = 0; i < inputProfilesElement.getElementsByTagName("inputProfile").getLength(); i++) {
-                Element inputProfileElement = (Element) inputProfilesElement.getElementsByTagName("inputProfile").item(i);
-                String name = inputProfileElement.getElementsByTagName("name").item(0).getTextContent();
-                Integer numberOfRuns = Integer.valueOf(inputProfileElement.getElementsByTagName("numberOfRuns").item(0).getTextContent());
-                Element QoSElement = (Element) inputProfileElement.getElementsByTagName("QoS").item(0);
-                HashMap<String, AdaptationGoal> adaptationGoalHashMap = new HashMap<>();
-                for (int j = 0; j < QoSElement.getElementsByTagName("adaptationGoal").getLength(); j++) {
-                    Element adaptationGoalElement = (Element) QoSElement.getElementsByTagName("adaptationGoal").item(j);
-                    String goalName = adaptationGoalElement.getElementsByTagName("name").item(0).getTextContent();
-                    AdaptationGoal adaptationGoal = new ThresholdAdaptationGoal(0.0);
-                    if (adaptationGoalElement.getAttribute("type").equals("interval")) {
-                        Double upperValue = Double.valueOf(adaptationGoalElement.getElementsByTagName("upperValue").item(0).getTextContent());
-                        Double lowerValue = Double.valueOf(adaptationGoalElement.getElementsByTagName("lowerValue").item(0).getTextContent());
-                        adaptationGoal = new IntervalAdaptationGoal(lowerValue, upperValue);
-                    }
-                    if (adaptationGoalElement.getAttribute("type").equals("threshold")) {
-                        Double threshold = Double.valueOf(adaptationGoalElement.getElementsByTagName("threshold").item(0).getTextContent());
-                        adaptationGoal = new ThresholdAdaptationGoal(threshold);
-                    }
-                    adaptationGoalHashMap.put(goalName, adaptationGoal);
-                }
-                HashMap<Integer, Double> moteProbabilaties = new HashMap<>();
-                for (int j = 0; j < inputProfileElement.getElementsByTagName("mote").getLength(); j++) {
-                    Element moteElement = (Element) inputProfileElement.getElementsByTagName("mote").item(j);
-
-                    moteProbabilaties.put(Integer.valueOf(moteElement.getElementsByTagName("moteNumber").item(0).getTextContent()) - 1, Double.parseDouble(moteElement.getElementsByTagName("activityProbability").item(0).getTextContent()));
-                }
-
-                inputProfiles.add(new InputProfile(name, new QualityOfService(adaptationGoalHashMap), numberOfRuns, moteProbabilaties, new HashMap<>(), new HashMap<>(), inputProfileElement, this));
-            }
+            loadInputProfiles(inputProfiles, doc);
         } catch (ParserConfigurationException e) {
             e.printStackTrace();
         } catch (SAXException e) {
@@ -953,7 +936,99 @@ public class MainGUI extends JFrame {
 
     }
 
-    private void updateInputProfile(LinkedList<InputProfile> inputProfiles) {
+    private void loadInputProfiles(LinkedList<AgingInputProfile> inputProfiles, Document doc) {
+        Element inputProfilesElement = doc.getDocumentElement();
+        for (int i = 0; i < inputProfilesElement.getElementsByTagName("inputProfile").getLength(); i++) {
+            Element inputProfileElement = (Element) inputProfilesElement.getElementsByTagName("inputProfile").item(i);
+            String name = getTagValue(inputProfileElement, "name");
+            Integer numberOfRuns = Integer.valueOf(getTagValue(inputProfileElement, "numberOfRuns"));
+            InputProfileDetails inputProfileDetails = getInputProfileDetails(inputProfileElement);
+            HashMap<String, AdaptationGoal> adaptationGoalHashMap = getAdaptationGoals(inputProfileElement);
+            HashMap<Integer, AgingMoteInputProfile> moteInputProfiles = getMoteInputProfiles(inputProfileElement);
+            inputProfiles.add(new AgingInputProfile(name,
+                    new QualityOfService(adaptationGoalHashMap),
+                    numberOfRuns,
+                    inputProfileDetails,
+                    moteInputProfiles,
+                    new HashMap<>(),
+                    new HashMap<>(),
+                    inputProfileElement,
+                    this));
+        }
+    }
+
+    private InputProfileDetails getInputProfileDetails(Element inputProfileElement) {
+        return new InputProfileDetails(
+            parseFloat(getTagValue(inputProfileElement, "agingCompensationCoefficient"), Constants.AGING_COMPENSATION_COEFFICIENT),
+            parseFloat(getTagValue(inputProfileElement, "energyAdjustmentMultiplier"), Constants.ENERGY_ADJUSTMENT_MULTIPLIER),
+            getTagValue(inputProfileElement, "simulationBeginning"),
+            getDurationPairFromXml(inputProfileElement, "deviceAdjustmentRate", "deviceAdjustmentRateUnit"),
+            getDurationPairFromXml(inputProfileElement, "deviceLifespan", "deviceLifespanUnit"),
+            getDurationPairFromXml(inputProfileElement, "simulationStepTime", "simulationStepTimeUnit")
+        );
+    }
+
+    private float parseFloat(String value, float defaultValue) {
+        try {
+            return Float.parseFloat(value);
+        } catch (Exception e) {
+            return defaultValue;
+        }
+    }
+
+    private HashMap<Integer, AgingMoteInputProfile> getMoteInputProfiles(Element inputProfileElement) {
+        HashMap<Integer, AgingMoteInputProfile> moteInputProfiles = new HashMap<>();
+        for (int j = 0; j < inputProfileElement.getElementsByTagName("mote").getLength(); j++) {
+            Element moteElement = (Element) inputProfileElement.getElementsByTagName("mote").item(j);
+
+            moteInputProfiles.put(Integer.parseInt(getTagValue(moteElement, "moteNumber")) - 1,
+                    getMoteInputProfile(moteElement));
+        }
+        return moteInputProfiles;
+    }
+
+    private AgingMoteInputProfile getMoteInputProfile(Element moteElement) {
+        return new AgingMoteInputProfile(
+                Double.parseDouble(getTagValue(moteElement, "activityProbability")),
+                getDurationPairFromXml(moteElement, "initialAge", "initialAgeUnit"),
+                Boolean.parseBoolean(getTagValue(moteElement, "adaptationWasApplied"))
+        );
+    }
+
+    private Pair<Long, String> getDurationPairFromXml(Element element, String durationValueTagName, String durationUnitTagName) {
+        return new Pair<>(Long.parseLong(getTagValue(element, durationValueTagName)), getTagValue(element, durationUnitTagName));
+    }
+
+    public String getTagValue(Element element, String tagName) {
+        return getTagValue(element, tagName, 0);
+    }
+
+    public String getTagValue(Element element, String tagName, int idx) {
+        return element.getElementsByTagName(tagName).item(idx).getTextContent();
+    }
+
+    private HashMap<String, AdaptationGoal> getAdaptationGoals(Element inputProfileElement) {
+        Element QoSElement = (Element) inputProfileElement.getElementsByTagName("QoS").item(0);
+        HashMap<String, AdaptationGoal> adaptationGoalHashMap = new HashMap<>();
+        for (int j = 0; j < QoSElement.getElementsByTagName("adaptationGoal").getLength(); j++) {
+            Element adaptationGoalElement = (Element) QoSElement.getElementsByTagName("adaptationGoal").item(j);
+            String goalName = getTagValue(adaptationGoalElement, "name");
+            AdaptationGoal adaptationGoal = new ThresholdAdaptationGoal(0.0);
+            if (adaptationGoalElement.getAttribute("type").equals("interval")) {
+                Double upperValue = Double.valueOf(getTagValue(adaptationGoalElement, "upperValue"));
+                Double lowerValue = Double.valueOf(getTagValue(adaptationGoalElement, "lowerValue"));
+                adaptationGoal = new IntervalAdaptationGoal(lowerValue, upperValue);
+            }
+            if (adaptationGoalElement.getAttribute("type").equals("threshold")) {
+                Double threshold = Double.valueOf(getTagValue(adaptationGoalElement, "threshold"));
+                adaptationGoal = new ThresholdAdaptationGoal(threshold);
+            }
+            adaptationGoalHashMap.put(goalName, adaptationGoal);
+        }
+        return adaptationGoalHashMap;
+    }
+
+    private void updateInputProfile(LinkedList<AgingInputProfile> inputProfiles) {
         InputProfilePanel.removeAll();
         GridBagConstraints constraints = new GridBagConstraints();
         constraints.gridx = 0;
@@ -962,7 +1037,7 @@ public class MainGUI extends JFrame {
         constraints.weighty = 0;
         JPanel panel;
 
-        for (InputProfile inputProfile : getInputProfiles()) {
+        for (AgingInputProfile inputProfile : getInputProfiles()) {
             panel = new JPanel(new BorderLayout());
             panel.setPreferredSize(new Dimension(InputProfilePanel.getWidth() - 10, 50));
             panel.setBackground(Color.white);
@@ -1036,7 +1111,7 @@ public class MainGUI extends JFrame {
         gateWayPainter.setWaypoints(gateWays.keySet());
 
         MoteWaypointPainter<Waypoint> motePainter = new MoteWaypointPainter<>();
-        motePainter.setWaypoints(motes.keySet());
+        motePainter.setWaypoints(motes.keySet(), environment.getMotes());
 
         MoteNumberWaypointPainter<Waypoint> moteNumberPainter = new MoteNumberWaypointPainter<>();
         moteNumberPainter.setWaypoints(motes);
@@ -1153,7 +1228,7 @@ public class MainGUI extends JFrame {
                 frame.setVisible(true);
             }
             if (e.getClickCount() == 1) {
-                setCharacteristics(index - 1, 0);
+                setCharacteristics(index - 1, selectedRun);
             }
 
 
@@ -1177,12 +1252,12 @@ public class MainGUI extends JFrame {
      */
     private void $$$setupUI$$$() {
         mainPanel = new JPanel();
-        mainPanel.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(3, 1, new Insets(0, 0, 0, 0), -1, -1));
+        mainPanel.setLayout(new GridLayoutManager(3, 1, new Insets(0, 0, 0, 0), -1, -1));
         toolBarEnvironment = new JToolBar();
         toolBarEnvironment.setFloatable(false);
         toolBarEnvironment.setRollover(true);
         toolBarEnvironment.putClientProperty("JToolBar.isRollover", Boolean.TRUE);
-        mainPanel.add(toolBarEnvironment, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(-1, 20), null, 0, false));
+        mainPanel.add(toolBarEnvironment, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(-1, 20), null, 0, false));
         final JLabel label1 = new JLabel();
         label1.setText("Configuration:");
         toolBarEnvironment.add(label1);
@@ -1201,50 +1276,50 @@ public class MainGUI extends JFrame {
         configureButton = new JButton();
         configureButton.setText("Configure");
         toolBarEnvironment.add(configureButton);
-        final com.intellij.uiDesigner.core.Spacer spacer1 = new com.intellij.uiDesigner.core.Spacer();
+        final Spacer spacer1 = new Spacer();
         toolBarEnvironment.add(spacer1);
         final JToolBar.Separator toolBar$Separator4 = new JToolBar.Separator();
         toolBarEnvironment.add(toolBar$Separator4);
         helpButton = new JButton();
         helpButton.setText("Help");
         toolBarEnvironment.add(helpButton);
-        final com.intellij.uiDesigner.core.Spacer spacer2 = new com.intellij.uiDesigner.core.Spacer();
+        final Spacer spacer2 = new Spacer();
         toolBarEnvironment.add(spacer2);
         final JToolBar.Separator toolBar$Separator5 = new JToolBar.Separator();
         toolBarEnvironment.add(toolBar$Separator5);
         aboutButton = new JButton();
         aboutButton.setText("About");
         toolBarEnvironment.add(aboutButton);
-        final com.intellij.uiDesigner.core.Spacer spacer3 = new com.intellij.uiDesigner.core.Spacer();
+        final Spacer spacer3 = new Spacer();
         toolBarEnvironment.add(spacer3);
         final JSplitPane splitPane1 = new JSplitPane();
         splitPane1.setDividerLocation(550);
         splitPane1.setOrientation(0);
-        mainPanel.add(splitPane1, new com.intellij.uiDesigner.core.GridConstraints(1, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, null, new Dimension(200, 200), null, 0, false));
+        mainPanel.add(splitPane1, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, new Dimension(200, 200), null, 0, false));
         final JSplitPane splitPane2 = new JSplitPane();
         splitPane1.setLeftComponent(splitPane2);
         final JPanel panel1 = new JPanel();
-        panel1.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
+        panel1.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
         splitPane2.setLeftComponent(panel1);
         entitiesPane = new JScrollPane();
         entitiesPane.setHorizontalScrollBarPolicy(31);
         entitiesPane.setVerticalScrollBarPolicy(22);
-        panel1.add(entitiesPane, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(250, -1), new Dimension(250, -1), 0, false));
+        panel1.add(entitiesPane, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(250, -1), new Dimension(250, -1), 0, false));
         entitesPanel = new JPanel();
         entitesPanel.setLayout(new GridBagLayout());
         entitiesPane.setViewportView(entitesPanel);
         final JPanel panel2 = new JPanel();
-        panel2.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(2, 2, new Insets(0, 0, 0, 0), -1, -1));
+        panel2.setLayout(new GridLayoutManager(2, 2, new Insets(0, 0, 0, 0), -1, -1));
         splitPane2.setRightComponent(panel2);
         final JToolBar toolBar1 = new JToolBar();
         toolBar1.setFloatable(false);
-        panel2.add(toolBar1, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(-1, 20), null, 0, false));
+        panel2.add(toolBar1, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(-1, 20), null, 0, false));
         final JLabel label2 = new JLabel();
         label2.setText("Map");
         toolBar1.add(label2);
         final JToolBar.Separator toolBar$Separator6 = new JToolBar.Separator();
         toolBar1.add(toolBar$Separator6);
-        final com.intellij.uiDesigner.core.Spacer spacer4 = new com.intellij.uiDesigner.core.Spacer();
+        final Spacer spacer4 = new Spacer();
         toolBar1.add(spacer4);
         final JLabel label3 = new JLabel();
         label3.setText("Center:");
@@ -1252,123 +1327,126 @@ public class MainGUI extends JFrame {
         centerLabel = new JLabel();
         centerLabel.setText("");
         toolBar1.add(centerLabel);
-        final com.intellij.uiDesigner.core.Spacer spacer5 = new com.intellij.uiDesigner.core.Spacer();
+        final Spacer spacer5 = new Spacer();
         toolBar1.add(spacer5);
         map = new JPanel();
         map.setLayout(new BorderLayout(0, 0));
         map.setBackground(new Color(-4473925));
         map.setForeground(new Color(-12828863));
-        panel2.add(map, new com.intellij.uiDesigner.core.GridConstraints(1, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(400, 200), null, 0, false));
-        final com.intellij.uiDesigner.core.Spacer spacer6 = new com.intellij.uiDesigner.core.Spacer();
-        panel2.add(spacer6, new com.intellij.uiDesigner.core.GridConstraints(0, 1, 2, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_VERTICAL, 1, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, new Dimension(-1, 250), null, null, 0, false));
+        panel2.add(map, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(400, 200), null, 0, false));
         final JPanel panel3 = new JPanel();
-        panel3.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(2, 1, new Insets(0, 0, 0, 0), -1, -1));
-        splitPane1.setRightComponent(panel3);
+        panel3.setLayout(new BorderLayout(0, 0));
+        map.add(panel3, BorderLayout.WEST);
+        final Spacer spacer6 = new Spacer();
+        panel2.add(spacer6, new GridConstraints(0, 1, 2, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, new Dimension(-1, 250), null, null, 0, false));
+        final JPanel panel4 = new JPanel();
+        panel4.setLayout(new GridLayoutManager(2, 1, new Insets(0, 0, 0, 0), -1, -1));
+        splitPane1.setRightComponent(panel4);
         final JSplitPane splitPane3 = new JSplitPane();
         splitPane3.setDividerLocation(450);
-        panel3.add(splitPane3, new com.intellij.uiDesigner.core.GridConstraints(1, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, null, new Dimension(200, 200), null, 0, false));
-        final JPanel panel4 = new JPanel();
-        panel4.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
-        splitPane3.setLeftComponent(panel4);
+        panel4.add(splitPane3, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, new Dimension(200, 200), null, 0, false));
         final JPanel panel5 = new JPanel();
-        panel5.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(3, 1, new Insets(0, 0, 0, 0), -1, -1));
-        panel4.add(panel5, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+        panel5.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
+        splitPane3.setLeftComponent(panel5);
+        final JPanel panel6 = new JPanel();
+        panel6.setLayout(new GridLayoutManager(3, 1, new Insets(0, 0, 0, 0), -1, -1));
+        panel5.add(panel6, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         console = new JPanel();
-        console.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(1, 1, new Insets(0, 5, 0, 0), -1, -1));
+        console.setLayout(new GridLayoutManager(1, 1, new Insets(0, 5, 0, 0), -1, -1));
         console.setBackground(new Color(-4473925));
         console.setForeground(new Color(-12828863));
-        panel5.add(console, new com.intellij.uiDesigner.core.GridConstraints(1, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(200, 200), new Dimension(-1, 400), 0, false));
+        panel6.add(console, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(200, 200), new Dimension(-1, 400), 0, false));
         final JScrollPane scrollPane1 = new JScrollPane();
         scrollPane1.setVerticalScrollBarPolicy(20);
-        console.add(scrollPane1, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, new Dimension(250, -1), null, null, 0, false));
+        console.add(scrollPane1, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, new Dimension(250, -1), null, null, 0, false));
         InputProfilePanel = new JPanel();
         InputProfilePanel.setLayout(new GridBagLayout());
         scrollPane1.setViewportView(InputProfilePanel);
-        final JPanel panel6 = new JPanel();
-        panel6.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(2, 1, new Insets(5, 5, 20, 0), -1, -1));
-        panel5.add(panel6, new com.intellij.uiDesigner.core.GridConstraints(2, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, new Dimension(250, -1), null, new Dimension(-1, 150), 0, false));
+        final JPanel panel7 = new JPanel();
+        panel7.setLayout(new GridLayoutManager(2, 1, new Insets(5, 5, 20, 0), -1, -1));
+        panel6.add(panel7, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(250, -1), null, new Dimension(-1, 150), 0, false));
         final JToolBar toolBar2 = new JToolBar();
         toolBar2.setFloatable(false);
-        panel6.add(toolBar2, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(-1, 20), null, 0, false));
+        panel7.add(toolBar2, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(-1, 20), null, 0, false));
         final JLabel label4 = new JLabel();
         label4.setText("Adaptation Goals:");
         toolBar2.add(label4);
-        final JPanel panel7 = new JPanel();
-        panel7.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
-        panel6.add(panel7, new com.intellij.uiDesigner.core.GridConstraints(1, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         final JPanel panel8 = new JPanel();
-        panel8.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(3, 1, new Insets(0, 0, 0, 0), -1, -1));
-        panel7.add(panel8, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, new Dimension(400, -1), null, null, 0, false));
+        panel8.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
+        panel7.add(panel8, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         final JPanel panel9 = new JPanel();
-        panel9.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(1, 5, new Insets(2, 3, 0, 3), -1, -1));
-        panel8.add(panel9, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, null, null, new Dimension(-1, 36), 0, false));
+        panel9.setLayout(new GridLayoutManager(3, 1, new Insets(0, 0, 0, 0), -1, -1));
+        panel8.add(panel9, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, new Dimension(400, -1), null, null, 0, false));
+        final JPanel panel10 = new JPanel();
+        panel10.setLayout(new GridLayoutManager(1, 5, new Insets(2, 3, 0, 3), -1, -1));
+        panel9.add(panel10, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, new Dimension(-1, 36), 0, false));
         final JLabel label5 = new JLabel();
         label5.setText("Reliable communication:");
-        panel9.add(label5, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final com.intellij.uiDesigner.core.Spacer spacer7 = new com.intellij.uiDesigner.core.Spacer();
-        panel9.add(spacer7, new com.intellij.uiDesigner.core.GridConstraints(0, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
+        panel10.add(label5, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final Spacer spacer7 = new Spacer();
+        panel10.add(spacer7, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
         relComlabel = new JLabel();
         relComlabel.setText("Interval: [-48,-42]");
-        panel9.add(relComlabel, new com.intellij.uiDesigner.core.GridConstraints(0, 2, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel10.add(relComlabel, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         editRelComButton = new JButton();
         editRelComButton.setText("Edit");
-        panel9.add(editRelComButton, new com.intellij.uiDesigner.core.GridConstraints(0, 4, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel10.add(editRelComButton, new GridConstraints(0, 4, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JLabel label6 = new JLabel();
         label6.setText("dB");
-        panel9.add(label6, new com.intellij.uiDesigner.core.GridConstraints(0, 3, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JPanel panel10 = new JPanel();
-        panel10.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(1, 5, new Insets(2, 3, 0, 3), -1, -1));
-        panel8.add(panel10, new com.intellij.uiDesigner.core.GridConstraints(1, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, null, new Dimension(262, 36), new Dimension(-1, 36), 0, false));
+        panel10.add(label6, new GridConstraints(0, 3, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JPanel panel11 = new JPanel();
+        panel11.setLayout(new GridLayoutManager(1, 5, new Insets(2, 3, 0, 3), -1, -1));
+        panel9.add(panel11, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, new Dimension(262, 36), new Dimension(-1, 36), 0, false));
         final JLabel label7 = new JLabel();
         label7.setText("Energy consumption:");
-        panel10.add(label7, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel11.add(label7, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         enConLabel = new JLabel();
         enConLabel.setText("Threshold: 100");
-        panel10.add(enConLabel, new com.intellij.uiDesigner.core.GridConstraints(0, 2, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel11.add(enConLabel, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         editEnConButton = new JButton();
         editEnConButton.setText("Edit");
-        panel10.add(editEnConButton, new com.intellij.uiDesigner.core.GridConstraints(0, 4, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final com.intellij.uiDesigner.core.Spacer spacer8 = new com.intellij.uiDesigner.core.Spacer();
-        panel10.add(spacer8, new com.intellij.uiDesigner.core.GridConstraints(0, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
+        panel11.add(editEnConButton, new GridConstraints(0, 4, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final Spacer spacer8 = new Spacer();
+        panel11.add(spacer8, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
         final JLabel label8 = new JLabel();
         label8.setText("mJ/min");
-        panel10.add(label8, new com.intellij.uiDesigner.core.GridConstraints(0, 3, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JPanel panel11 = new JPanel();
-        panel11.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(1, 5, new Insets(2, 3, 0, 3), -1, -1));
-        panel8.add(panel11, new com.intellij.uiDesigner.core.GridConstraints(2, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, null, new Dimension(262, 36), new Dimension(-1, 36), 0, false));
+        panel11.add(label8, new GridConstraints(0, 3, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JPanel panel12 = new JPanel();
+        panel12.setLayout(new GridLayoutManager(1, 5, new Insets(2, 3, 0, 3), -1, -1));
+        panel9.add(panel12, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, new Dimension(262, 36), new Dimension(-1, 36), 0, false));
         final JLabel label9 = new JLabel();
         label9.setText("Collision Bound: ");
-        panel11.add(label9, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel12.add(label9, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         colBoundLabel = new JLabel();
         colBoundLabel.setText("Threshold: 10");
-        panel11.add(colBoundLabel, new com.intellij.uiDesigner.core.GridConstraints(0, 2, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel12.add(colBoundLabel, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         editColBoundButton = new JButton();
         editColBoundButton.setText("Edit");
-        panel11.add(editColBoundButton, new com.intellij.uiDesigner.core.GridConstraints(0, 4, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final com.intellij.uiDesigner.core.Spacer spacer9 = new com.intellij.uiDesigner.core.Spacer();
-        panel11.add(spacer9, new com.intellij.uiDesigner.core.GridConstraints(0, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
+        panel12.add(editColBoundButton, new GridConstraints(0, 4, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final Spacer spacer9 = new Spacer();
+        panel12.add(spacer9, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
         final JLabel label10 = new JLabel();
         label10.setText("%");
-        panel11.add(label10, new com.intellij.uiDesigner.core.GridConstraints(0, 3, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel12.add(label10, new GridConstraints(0, 3, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JToolBar toolBar3 = new JToolBar();
         toolBar3.setFloatable(false);
-        panel5.add(toolBar3, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(-1, 20), null, 0, false));
+        panel6.add(toolBar3, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(-1, 20), null, 0, false));
         final JLabel label11 = new JLabel();
         label11.setText("Input Profile");
         toolBar3.add(label11);
-        final JPanel panel12 = new JPanel();
-        panel12.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
-        splitPane3.setRightComponent(panel12);
+        final JPanel panel13 = new JPanel();
+        panel13.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
+        splitPane3.setRightComponent(panel13);
         final JSplitPane splitPane4 = new JSplitPane();
         splitPane4.setDividerLocation(650);
-        panel12.add(splitPane4, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, null, new Dimension(200, 200), null, 0, false));
-        final JPanel panel13 = new JPanel();
-        panel13.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(2, 1, new Insets(0, 0, 0, 0), -1, -1));
-        splitPane4.setLeftComponent(panel13);
+        panel13.add(splitPane4, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, new Dimension(200, 200), null, 0, false));
+        final JPanel panel14 = new JPanel();
+        panel14.setLayout(new GridLayoutManager(2, 1, new Insets(0, 0, 0, 0), -1, -1));
+        splitPane4.setLeftComponent(panel14);
         tabbedPaneGraphs = new JTabbedPane();
         tabbedPaneGraphs.setBackground(new Color(-4473925));
         tabbedPaneGraphs.setForeground(new Color(-12828863));
-        panel13.add(tabbedPaneGraphs, new com.intellij.uiDesigner.core.GridConstraints(1, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, null, new Dimension(250, 400), null, 0, false));
+        panel14.add(tabbedPaneGraphs, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, new Dimension(250, 400), null, 0, false));
         receivedPowerGraph = new JPanel();
         receivedPowerGraph.setLayout(new BorderLayout(0, 0));
         receivedPowerGraph.setBackground(new Color(-4473925));
@@ -1386,9 +1464,12 @@ public class MainGUI extends JFrame {
         usedEnergyGraph = new JPanel();
         usedEnergyGraph.setLayout(new BorderLayout(0, 0));
         tabbedPaneGraphs.addTab("Used Energy", usedEnergyGraph);
+        ageingFactorGraph = new JPanel();
+        ageingFactorGraph.setLayout(new BorderLayout(0, 0));
+        tabbedPaneGraphs.addTab("Aging Factor", ageingFactorGraph);
         final JToolBar toolBar4 = new JToolBar();
         toolBar4.setFloatable(false);
-        panel13.add(toolBar4, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(-1, 20), null, 0, false));
+        panel14.add(toolBar4, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(-1, 20), null, 0, false));
         final JToolBar.Separator toolBar$Separator7 = new JToolBar.Separator();
         toolBar4.add(toolBar$Separator7);
         moteCharacteristicsButton = new JButton();
@@ -1408,14 +1489,14 @@ public class MainGUI extends JFrame {
         resultsButton = new JButton();
         resultsButton.setText("Results");
         toolBar4.add(resultsButton);
-        final com.intellij.uiDesigner.core.Spacer spacer10 = new com.intellij.uiDesigner.core.Spacer();
+        final Spacer spacer10 = new Spacer();
         toolBar4.add(spacer10);
-        final JPanel panel14 = new JPanel();
-        panel14.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(2, 1, new Insets(0, 0, 0, 0), -1, -1));
-        splitPane4.setRightComponent(panel14);
+        final JPanel panel15 = new JPanel();
+        panel15.setLayout(new GridLayoutManager(2, 1, new Insets(0, 0, 0, 0), -1, -1));
+        splitPane4.setRightComponent(panel15);
         final JToolBar toolBar5 = new JToolBar();
         toolBar5.setFloatable(false);
-        panel14.add(toolBar5, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(-1, 20), null, 0, false));
+        panel15.add(toolBar5, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(-1, 20), null, 0, false));
         final JToolBar.Separator toolBar$Separator9 = new JToolBar.Separator();
         toolBar5.add(toolBar$Separator9);
         moteApplicationButton = new JButton();
@@ -1434,10 +1515,10 @@ public class MainGUI extends JFrame {
         moteApplicationLabel = new JLabel();
         moteApplicationLabel.setText("");
         toolBar5.add(moteApplicationLabel);
-        final com.intellij.uiDesigner.core.Spacer spacer11 = new com.intellij.uiDesigner.core.Spacer();
+        final Spacer spacer11 = new Spacer();
         toolBar5.add(spacer11);
         tabbedPane1 = new JTabbedPane();
-        panel14.add(tabbedPane1, new com.intellij.uiDesigner.core.GridConstraints(1, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, null, new Dimension(200, 200), null, 0, false));
+        panel15.add(tabbedPane1, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, new Dimension(200, 200), null, 0, false));
         particulateMatterPanel = new JPanel();
         particulateMatterPanel.setLayout(new BorderLayout(0, 0));
         tabbedPane1.addTab("Particulate matter", particulateMatterPanel);
@@ -1450,15 +1531,15 @@ public class MainGUI extends JFrame {
         ozonePanel = new JPanel();
         ozonePanel.setLayout(new BorderLayout(0, 0));
         tabbedPane1.addTab("Ozone", ozonePanel);
-        final JPanel panel15 = new JPanel();
-        panel15.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(1, 3, new Insets(0, 0, 0, 0), 0, 0));
-        panel3.add(panel15, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JPanel panel16 = new JPanel();
+        panel16.setLayout(new GridLayoutManager(1, 3, new Insets(0, 0, 0, 0), 0, 0));
+        panel4.add(panel16, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         toolBarAdaptation = new JToolBar();
         toolBarAdaptation.setBorderPainted(true);
         toolBarAdaptation.setFloatable(false);
         toolBarAdaptation.setRollover(true);
         toolBarAdaptation.putClientProperty("JToolBar.isRollover", Boolean.TRUE);
-        panel15.add(toolBarAdaptation, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(-1, 20), null, 0, false));
+        panel16.add(toolBarAdaptation, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(-1, 20), null, 0, false));
         final JLabel label15 = new JLabel();
         label15.setText("Simulation  ");
         toolBarAdaptation.add(label15);
@@ -1477,7 +1558,7 @@ public class MainGUI extends JFrame {
         toolBarAdaptation.add(label17);
         speedSlider = new JSlider();
         speedSlider.setMajorTickSpacing(3);
-        speedSlider.setMaximum(5);
+        speedSlider.setMaximum(10);
         speedSlider.setMinimum(1);
         speedSlider.setMinorTickSpacing(1);
         speedSlider.setPaintLabels(false);
@@ -1485,12 +1566,12 @@ public class MainGUI extends JFrame {
         speedSlider.setValue(1);
         speedSlider.setValueIsAdjusting(false);
         toolBarAdaptation.add(speedSlider);
-        final JPanel panel16 = new JPanel();
-        panel16.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), 0, 0));
-        panel15.add(panel16, new com.intellij.uiDesigner.core.GridConstraints(0, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_NORTH, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(350, -1), new Dimension(350, -1), 0, false));
+        final JPanel panel17 = new JPanel();
+        panel17.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), 0, 0));
+        panel16.add(panel17, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_NORTH, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(350, -1), new Dimension(350, -1), 0, false));
         final JToolBar toolBar6 = new JToolBar();
         toolBar6.setFloatable(false);
-        panel16.add(toolBar6, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(-1, 35), null, 0, false));
+        panel17.add(toolBar6, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(-1, 35), null, 0, false));
         final JToolBar.Separator toolBar$Separator13 = new JToolBar.Separator();
         toolBar6.add(toolBar$Separator13);
         totalRunButton = new JButton();
@@ -1509,12 +1590,12 @@ public class MainGUI extends JFrame {
         progressLabel = new JLabel();
         progressLabel.setText("0/0");
         toolBar6.add(progressLabel);
-        final JPanel panel17 = new JPanel();
-        panel17.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), 0, 0));
-        panel15.add(panel17, new com.intellij.uiDesigner.core.GridConstraints(0, 2, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_NORTH, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        final JPanel panel18 = new JPanel();
+        panel18.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), 0, 0));
+        panel16.add(panel18, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_NORTH, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         final JToolBar toolBar7 = new JToolBar();
         toolBar7.setFloatable(false);
-        panel17.add(toolBar7, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(-1, 35), null, 0, false));
+        panel18.add(toolBar7, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(-1, 35), null, 0, false));
         final JToolBar.Separator toolBar$Separator15 = new JToolBar.Separator();
         toolBar7.add(toolBar$Separator15);
         final JLabel label20 = new JLabel();
@@ -1531,7 +1612,7 @@ public class MainGUI extends JFrame {
         toolBar7.add(clearButton);
         final JToolBar.Separator toolBar$Separator16 = new JToolBar.Separator();
         toolBar7.add(toolBar$Separator16);
-        final com.intellij.uiDesigner.core.Spacer spacer12 = new com.intellij.uiDesigner.core.Spacer();
+        final Spacer spacer12 = new Spacer();
         toolBar7.add(spacer12);
     }
 
@@ -1632,9 +1713,9 @@ public class MainGUI extends JFrame {
 
     private class InputProfileEditMouse extends MouseAdapter {
 
-        private InputProfile inputProfile;
+        private AgingInputProfile inputProfile;
 
-        public InputProfileEditMouse(InputProfile inputProfile) {
+        public InputProfileEditMouse(AgingInputProfile inputProfile) {
             this.inputProfile = inputProfile;
         }
 
@@ -1644,8 +1725,8 @@ public class MainGUI extends JFrame {
                 JFrame frame = new JFrame("Edit input profile");
                 EditInputProfileGUI EditInputProfileGUI = new EditInputProfileGUI(inputProfile, simulation.getEnvironment());
                 frame.setContentPane(EditInputProfileGUI.getMainPanel());
-                frame.setPreferredSize(new Dimension(750, 400));
-                frame.setMinimumSize(new Dimension(750, 400));
+                frame.setPreferredSize(new Dimension(750, 750));
+                frame.setMinimumSize(new Dimension(750, 750));
                 frame.setVisible(true);
             } else {
                 JOptionPane.showMessageDialog(null, "Load a configuration before editing an input profile", "InfoBox: " + "Edit InputProfile", JOptionPane.INFORMATION_MESSAGE);
@@ -1655,9 +1736,9 @@ public class MainGUI extends JFrame {
 
     private class InputProfileSelectMouse extends MouseAdapter {
 
-        private InputProfile inputProfile;
+        private AgingInputProfile inputProfile;
 
-        public InputProfileSelectMouse(InputProfile inputProfile) {
+        public InputProfileSelectMouse(AgingInputProfile inputProfile) {
             this.inputProfile = inputProfile;
         }
 
@@ -1710,7 +1791,7 @@ public class MainGUI extends JFrame {
      * @param run       The number of the run.
      */
     public void setCharacteristics(Integer moteIndex, Integer run) {
-
+        selectedRun = run;
         moteCharacteristicsLabel.setText("Mote " + (moteIndex + 1) + " | Run " + (run + 1));
         // update received power graph
         receivedPowerGraph.removeAll();
@@ -1739,6 +1820,11 @@ public class MainGUI extends JFrame {
         distanceToGatewayGraph.add(generateDistanceToGatewayGraph(simulation.getEnvironment().getMotes().get(moteIndex), run));
         distanceToGatewayGraph.repaint();
         distanceToGatewayGraph.revalidate();
+        // update distance to gateway graph
+        ageingFactorGraph.removeAll();
+        ageingFactorGraph.add(generateAgingFactorGraph(simulation.getEnvironment().getMotes().get(moteIndex), run));
+        ageingFactorGraph.repaint();
+        ageingFactorGraph.revalidate();
 
         resultsButton.setEnabled(true);
         usedEnergy = energyData.getRight();
@@ -2518,6 +2604,30 @@ public class MainGUI extends JFrame {
 
     }
 
+    public static ChartPanel generateAgingFactorGraph(AgingMote mote, Integer run) {
+        XYSeriesCollection data = new XYSeriesCollection();
+        XYSeries series = new XYSeries("Aging factor");
+        IntStream.range(0, mote.getAgingFactorHistory(run).size())
+                .forEach(i -> series.add(i + 1, mote.getAgingFactorHistory(run).get(i)));
+        data.addSeries(series);
+
+        JFreeChart chart = ChartFactory.createXYLineChart(
+                null, // chart title
+                "Transmissions", // x axis label
+                "Aging factor", // y axis label
+                data, // data
+                PlotOrientation.VERTICAL,
+                true, // include legend
+                true, // tooltips
+                false // urls
+        );
+        XYPlot plot = (XYPlot) chart.getPlot();
+//        NumberAxis range = (NumberAxis) plot.getRangeAxis();
+//        range.setRange(0.0, 15.0);
+//        range.setTickUnit(new NumberTickUnit(1.0));
+        return new ChartPanel(chart);
+    }
+
     /**
      * Generates a power setting graph for a specific mote for a specific run.
      *
@@ -2528,7 +2638,7 @@ public class MainGUI extends JFrame {
     public static ChartPanel generatePowerSettingGraph(NetworkEntity mote, Integer run) {
         XYSeriesCollection dataPowerSettingMote = new XYSeriesCollection();
         XYSeries seriesPowerSettingMote = new XYSeries("Power setting");
-        for (Pair<Integer, Integer> powerSetting : mote.getPowerSettingHistory(run)) {
+        for (Pair<Integer, Double> powerSetting : mote.getPowerSettingHistory(run)) {
             seriesPowerSettingMote.add(powerSetting.getLeft(), powerSetting.getRight());
         }
         dataPowerSettingMote.addSeries(seriesPowerSettingMote);
@@ -2544,9 +2654,9 @@ public class MainGUI extends JFrame {
                 false // urls
         );
         XYPlot plot = (XYPlot) powerSettingChartMote.getPlot();
-        NumberAxis range = (NumberAxis) plot.getRangeAxis();
-        range.setRange(0.0, 15.0);
-        range.setTickUnit(new NumberTickUnit(1.0));
+//        NumberAxis range = (NumberAxis) plot.getRangeAxis();
+//        range.setRange(0.0, 15.0);
+//        range.setTickUnit(new NumberTickUnit(1.0));
         return new ChartPanel(powerSettingChartMote);
 
     }
