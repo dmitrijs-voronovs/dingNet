@@ -3,6 +3,15 @@
     <inputProfile>
         <name>ReliableEfficient</name>
         <numberOfRuns>10</numberOfRuns>
+        <deviceAdjustmentRate>1</deviceAdjustmentRate>
+        <deviceAdjustmentRateUnit>MONTHS</deviceAdjustmentRateUnit>
+        <agingCompensationCoefficient>0.95</agingCompensationCoefficient>
+        <energyAdjustmentMultiplier>300</energyAdjustmentMultiplier>
+        <deviceLifespan>20</deviceLifespan>
+        <deviceLifespanUnit>YEARS</deviceLifespanUnit>
+        <simulationBeginning>2022-01-01</simulationBeginning>
+        <simulationStepTime>30</simulationStepTime>
+        <simulationStepTimeUnit>MINUTES</simulationStepTimeUnit>
         <QoS>
             <adaptationGoal type="interval">
                 <name>reliableCommunication</name>
@@ -14,40 +23,73 @@
             <mote>
                 <moteNumber>1</moteNumber>
                 <activityProbability>0.7</activityProbability>
+                <initialAge>1</initialAge>
+                <initialAgeUnit>HOURS</initialAgeUnit>
+                <adaptationWasApplied>true</adaptationWasApplied>
             </mote>
             <mote>
                 <moteNumber>0</moteNumber>
                 <activityProbability>1.0</activityProbability>
+                <initialAge>1</initialAge>
+                <initialAgeUnit>HOURS</initialAgeUnit>
+                <adaptationWasApplied>true</adaptationWasApplied>
             </mote>
             <mote>
                 <moteNumber>2</moteNumber>
                 <activityProbability>1.0</activityProbability>
+                <initialAge>1</initialAge>
+                <initialAgeUnit>HOURS</initialAgeUnit>
+                <adaptationWasApplied>true</adaptationWasApplied>
             </mote>
             <mote>
                 <moteNumber>3</moteNumber>
                 <activityProbability>0.86</activityProbability>
+                <initialAge>1</initialAge>
+                <initialAgeUnit>HOURS</initialAgeUnit>
+                <adaptationWasApplied>true</adaptationWasApplied>
             </mote>
             <mote>
                 <moteNumber>4</moteNumber>
                 <activityProbability>1.0</activityProbability>
+                <initialAge>1</initialAge>
+                <initialAgeUnit>HOURS</initialAgeUnit>
+                <adaptationWasApplied>true</adaptationWasApplied>
             </mote>
             <mote>
                 <moteNumber>5</moteNumber>
                 <activityProbability>1.0</activityProbability>
+                <initialAge>1</initialAge>
+                <initialAgeUnit>HOURS</initialAgeUnit>
+                <adaptationWasApplied>true</adaptationWasApplied>
             </mote>
             <mote>
                 <moteNumber>6</moteNumber>
                 <activityProbability>1.0</activityProbability>
+                <initialAge>1</initialAge>
+                <initialAgeUnit>HOURS</initialAgeUnit>
+                <adaptationWasApplied>true</adaptationWasApplied>
             </mote>
             <mote>
                 <moteNumber>7</moteNumber>
                 <activityProbability>1.0</activityProbability>
+                <initialAge>1</initialAge>
+                <initialAgeUnit>HOURS</initialAgeUnit>
+                <adaptationWasApplied>true</adaptationWasApplied>
             </mote>
         </moteProbabilaties>
     </inputProfile>
     <inputProfile>
         <name>ReliableEfficientOpen</name>
         <numberOfRuns>10</numberOfRuns>
+        <deviceAdjustmentRate>1</deviceAdjustmentRate>
+        <deviceAdjustmentRateUnit>MONTHS</deviceAdjustmentRateUnit>
+        <agingCompensationCoefficient>0.95</agingCompensationCoefficient>
+        <energyAdjustmentMultiplier>300</energyAdjustmentMultiplier>
+        <deviceLifespan>20</deviceLifespan>
+        <deviceLifespanUnit>YEARS</deviceLifespanUnit>
+        <simulationBeginning>2022-01-01</simulationBeginning>
+        <simulationStepTime>30</simulationStepTime>
+        <simulationStepTimeUnit>MINUTES</simulationStepTimeUnit>
         <QoS>
             <adaptationGoal type="interval">
                 <name>reliableCommunication</name>
@@ -59,14 +101,23 @@
             <mote>
                 <moteNumber>1</moteNumber>
                 <activityProbability>1.0</activityProbability>
+                <initialAge>1</initialAge>
+                <initialAgeUnit>HOURS</initialAgeUnit>
+                <adaptationWasApplied>true</adaptationWasApplied>
             </mote>
             <mote>
                 <moteNumber>2</moteNumber>
                 <activityProbability>1.0</activityProbability>
+                <initialAge>1</initialAge>
+                <initialAgeUnit>HOURS</initialAgeUnit>
+                <adaptationWasApplied>true</adaptationWasApplied>
             </mote>
             <mote>
                 <moteNumber>3</moteNumber>
                 <activityProbability>1.0</activityProbability>
+                <initialAge>1</initialAge>
+                <initialAgeUnit>HOURS</initialAgeUnit>
+                <adaptationWasApplied>true</adaptationWasApplied>
             </mote>
         </moteProbabilaties>
     </inputProfile>

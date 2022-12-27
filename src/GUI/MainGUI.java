@@ -67,6 +67,9 @@ import java.awt.image.FilteredImageSource;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.sql.Date;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.*;
 import java.util.stream.IntStream;
@@ -127,7 +130,7 @@ public class MainGUI extends JFrame {
     private static TileFactoryInfo info = new OSMTileFactoryInfo();
     private static DefaultTileFactory tileFactory = new DefaultTileFactory(info);
 
-    private static LinkedList<InputProfile> inputProfiles;
+    private static LinkedList<AgingInputProfile> inputProfiles;
     private static Simulation simulation;
     private static LinkedList<GenericFeedbackLoop> algorithms = new LinkedList<>();
     private LinkedList<AgingMoteProbe> moteProbe;
@@ -230,16 +233,16 @@ public class MainGUI extends JFrame {
                         Element wayPoints = (Element) configuration.getElementsByTagName("wayPoints").item(0);
                         Element region = (Element) map.getElementsByTagName("region").item(0);
                         Element origin = (Element) region.getElementsByTagName("origin").item(0);
-                        GeoPosition mapOrigin = new GeoPosition(Double.valueOf(origin.getElementsByTagName("latitude").item(0).getTextContent())
-                                , Double.valueOf(origin.getElementsByTagName("longitude").item(0).getTextContent()));
-                        Integer width = Integer.valueOf(region.getElementsByTagName("width").item(0).getTextContent());
-                        Integer height = Integer.valueOf(region.getElementsByTagName("height").item(0).getTextContent());
+                        GeoPosition mapOrigin = new GeoPosition(Double.valueOf(getTagValue(origin, "latitude"))
+                                , Double.valueOf(getTagValue(origin, "longitude")));
+                        Integer width = Integer.valueOf(getTagValue(region, "width"));
+                        Integer height = Integer.valueOf(getTagValue(region, "height"));
                         Integer numberOfZones = Integer.valueOf(((Element) characteristics.getElementsByTagName("regionProperty").item(0)).getAttribute("numberOfZones"));
 
                         Characteristic[][] characteristicsMap = new Characteristic[width][height];
                         for (int j = 0; j < Math.round(Math.sqrt(numberOfZones)); j++) {
                             int i = 0;
-                            for (String characteristicName : characteristics.getElementsByTagName("row").item(j).getTextContent().split("-")) {
+                            for (String characteristicName : getTagValue(characteristics, "row", j).split("-")) {
                                 Characteristic characteristic = Characteristic.valueOf(characteristicName);
                                 for (int x = (int) Math.round(i * ((double) width) / Math.round(Math.sqrt(numberOfZones)));
                                      x < (int) Math.round((i + 1) * ((double) width) / Math.round(Math.sqrt(numberOfZones))); x++) {
@@ -269,15 +272,15 @@ public class MainGUI extends JFrame {
 
                         for (int i = 0; i < motes.getElementsByTagName("mote").getLength(); i++) {
                             moteNode = (Element) motes.getElementsByTagName("mote").item(i);
-                            Long devEUI = Long.parseUnsignedLong(moteNode.getElementsByTagName("devEUI").item(0).getTextContent());
+                            Long devEUI = Long.parseUnsignedLong(getTagValue(moteNode, "devEUI"));
                             Element location = (Element) moteNode.getElementsByTagName("location").item(0);
-                            Integer xPos = Integer.valueOf(location.getElementsByTagName("xPos").item(0).getTextContent());
-                            Integer yPos = Integer.valueOf(location.getElementsByTagName("yPos").item(0).getTextContent());
-                            Integer transmissionPower = Integer.valueOf(moteNode.getElementsByTagName("transmissionPower").item(0).getTextContent());
-                            Integer spreadingFactor = Integer.valueOf(moteNode.getElementsByTagName("spreadingFactor").item(0).getTextContent());
-                            Integer energyLevel = Integer.valueOf(moteNode.getElementsByTagName("energyLevel").item(0).getTextContent());
-                            Integer samplingRate = Integer.valueOf(moteNode.getElementsByTagName("samplingRate").item(0).getTextContent());
-                            Double movementSpeed = Double.valueOf(moteNode.getElementsByTagName("movementSpeed").item(0).getTextContent());
+                            Integer xPos = Integer.valueOf(getTagValue(location, "xPos"));
+                            Integer yPos = Integer.valueOf(getTagValue(location, "yPos"));
+                            Integer transmissionPower = Integer.valueOf(getTagValue(moteNode, "transmissionPower"));
+                            Integer spreadingFactor = Integer.valueOf(getTagValue(moteNode, "spreadingFactor"));
+                            Integer energyLevel = Integer.valueOf(getTagValue(moteNode, "energyLevel"));
+                            Integer samplingRate = Integer.valueOf(getTagValue(moteNode, "samplingRate"));
+                            Double movementSpeed = Double.valueOf(getTagValue(moteNode, "movementSpeed"));
                             Element sensors = (Element) moteNode.getElementsByTagName("sensors").item(0);
                             Element sensornode = (Element) sensors.getElementsByTagName("sensor").item(0);
                             LinkedList<MoteSensor> moteSensors = new LinkedList<>();
@@ -301,12 +304,12 @@ public class MainGUI extends JFrame {
 
                         for (int i = 0; i < gateways.getElementsByTagName("gateway").getLength(); i++) {
                             gatewayNode = (Element) gateways.getElementsByTagName("gateway").item(i);
-                            Long devEUI = Long.parseUnsignedLong(gatewayNode.getElementsByTagName("devEUI").item(0).getTextContent());
+                            Long devEUI = Long.parseUnsignedLong(getTagValue(gatewayNode, "devEUI"));
                             Element location = (Element) gatewayNode.getElementsByTagName("location").item(0);
-                            Integer xPos = Integer.valueOf(location.getElementsByTagName("xPos").item(0).getTextContent());
-                            Integer yPos = Integer.valueOf(location.getElementsByTagName("yPos").item(0).getTextContent());
-                            Integer transmissionPower = Integer.valueOf(gatewayNode.getElementsByTagName("transmissionPower").item(0).getTextContent());
-                            Integer spreadingFactor = Integer.valueOf(gatewayNode.getElementsByTagName("spreadingFactor").item(0).getTextContent());
+                            Integer xPos = Integer.valueOf(getTagValue(location, "xPos"));
+                            Integer yPos = Integer.valueOf(getTagValue(location, "yPos"));
+                            Integer transmissionPower = Integer.valueOf(getTagValue(gatewayNode, "transmissionPower"));
+                            Integer spreadingFactor = Integer.valueOf(getTagValue(gatewayNode, "spreadingFactor"));
                             new Gateway(devEUI, xPos, yPos, simulation.getEnvironment(), transmissionPower, spreadingFactor);
                         }
 
@@ -872,7 +875,7 @@ public class MainGUI extends JFrame {
         entitesPanel.revalidate();
     }
 
-    private LinkedList<InputProfile> getInputProfiles() {
+    private LinkedList<AgingInputProfile> getInputProfiles() {
         return inputProfiles;
     }
 
@@ -914,8 +917,8 @@ public class MainGUI extends JFrame {
 
     }
 
-    private LinkedList<InputProfile> loadInputProfilesFromFile() {
-        LinkedList<InputProfile> inputProfiles = new LinkedList<>();
+    private LinkedList<AgingInputProfile> loadInputProfilesFromFile() {
+        LinkedList<AgingInputProfile> inputProfiles = new LinkedList<>();
         try {
             File file = new File(MainGUI.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
             file = new File(file.getParent() + "/inputProfiles/inputProfile.xml");
@@ -936,27 +939,101 @@ public class MainGUI extends JFrame {
 
     }
 
-    private void loadInputProfiles(LinkedList<InputProfile> inputProfiles, Document doc) {
+    private void loadInputProfiles(LinkedList<AgingInputProfile> inputProfiles, Document doc) {
         Element inputProfilesElement = doc.getDocumentElement();
         for (int i = 0; i < inputProfilesElement.getElementsByTagName("inputProfile").getLength(); i++) {
             Element inputProfileElement = (Element) inputProfilesElement.getElementsByTagName("inputProfile").item(i);
-            String name = inputProfileElement.getElementsByTagName("name").item(0).getTextContent();
-            Integer numberOfRuns = Integer.valueOf(inputProfileElement.getElementsByTagName("numberOfRuns").item(0).getTextContent());
+            String name = getTagValue(inputProfileElement, "name");
+            Integer numberOfRuns = Integer.valueOf(getTagValue(inputProfileElement, "numberOfRuns"));
+            InputProfileDetails inputProfileDetails = getInputProfileDetails(inputProfileElement);
             HashMap<String, AdaptationGoal> adaptationGoalHashMap = getAdaptationGoals(inputProfileElement);
-            HashMap<Integer, Double> moteProbabilities = getMoteProbabilities(inputProfileElement);
-
-            inputProfiles.add(new InputProfile(name, new QualityOfService(adaptationGoalHashMap), numberOfRuns, moteProbabilities, new HashMap<>(), new HashMap<>(), inputProfileElement, this));
+            HashMap<Integer, AgingMoteInputProfile> moteInputProfiles = getMoteInputProfiles(inputProfileElement);
+            inputProfiles.add(new AgingInputProfile(name,
+                    new QualityOfService(adaptationGoalHashMap),
+                    numberOfRuns,
+                    inputProfileDetails,
+                    moteInputProfiles,
+                    new HashMap<>(),
+                    new HashMap<>(),
+                    inputProfileElement,
+                    this));
         }
     }
 
-    private HashMap<Integer, Double> getMoteProbabilities(Element inputProfileElement) {
-        HashMap<Integer, Double> moteProbabilaties = new HashMap<>();
+    private InputProfileDetails getInputProfileDetails(Element inputProfileElement) {
+        return new InputProfileDetails(
+            parseFloat(getTagValue(inputProfileElement, "agingCompensationCoefficient"), Constants.AGING_COMPENSATION_COEFFICIENT),
+            parseFloat(getTagValue(inputProfileElement, "energyAdjustmentMultiplier"), Constants.ENERGY_ADJUSTMENT_MULTIPLIER),
+            parseCalendar(inputProfileElement, "simulationBeginning", Constants.SIMULATION_BEGINNING),
+            getDurationFromXml(inputProfileElement, "deviceAdjustmentRate", "deviceAdjustmentRateUnit"),
+            getDurationFromXml(inputProfileElement, "deviceLifespan", "deviceLifespanUnit"),
+            getDurationFromXml(inputProfileElement, "simulationStepTime", "simulationStepTimeUnit")
+        );
+    }
+
+    private float parseFloat(String value, float defaultValue) {
+        try {
+            return Float.parseFloat(value);
+        } catch (Exception e) {
+            return defaultValue;
+        }
+    }
+
+    private Calendar parseCalendar(Element element, String tagName, Calendar defaultValue) {
+        try {
+            String value = getTagValue(element, tagName);
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(Date.valueOf(value));
+            return calendar;
+        } catch (Exception e) {
+            return defaultValue;
+        }
+    }
+
+    private HashMap<Integer, AgingMoteInputProfile> getMoteInputProfiles(Element inputProfileElement) {
+        HashMap<Integer, AgingMoteInputProfile> moteInputProfiles = new HashMap<>();
         for (int j = 0; j < inputProfileElement.getElementsByTagName("mote").getLength(); j++) {
             Element moteElement = (Element) inputProfileElement.getElementsByTagName("mote").item(j);
 
-            moteProbabilaties.put(Integer.valueOf(moteElement.getElementsByTagName("moteNumber").item(0).getTextContent()) - 1, Double.parseDouble(moteElement.getElementsByTagName("activityProbability").item(0).getTextContent()));
+            moteInputProfiles.put(Integer.parseInt(getTagValue(moteElement, "moteNumber")) - 1,
+                    getMoteInputProfile(moteElement));
         }
-        return moteProbabilaties;
+        return moteInputProfiles;
+    }
+
+    private AgingMoteInputProfile getMoteInputProfile(Element moteElement) {
+        return new AgingMoteInputProfile(
+                Double.parseDouble(getTagValue(moteElement, "activityProbability")),
+                getDurationFromXml(moteElement, "initialAge", "initialAgeUnit"),
+                Boolean.parseBoolean(getTagValue(moteElement, "adaptationWasApplied"))
+        );
+    }
+
+    private Duration getDurationFromXml(Element element, String durationValueTagName, String durationUnitTagName) {
+        return parseDuration(Long.parseLong(getTagValue(element, durationValueTagName)), getTagValue(element, durationUnitTagName));
+    }
+
+    private Duration parseDuration(long initialAgeN, String initialAgeUnit) {
+        return ChronoUnit.valueOf(initialAgeUnit.toUpperCase()).getDuration().multipliedBy(initialAgeN);
+    }
+
+    public String getTagValue(Element element, String tagName) {
+        return getTagValue(element, tagName, 0);
+    }
+
+    public String getTagValue(Element element, String tagName, int idx) {
+        return element.getElementsByTagName(tagName).item(idx).getTextContent();
+    }
+
+    private HashMap<Integer, Double> getMoteProbabilities(Element inputProfileElement) {
+        HashMap<Integer, Double> moteProbabilities = new HashMap<>();
+        for (int j = 0; j < inputProfileElement.getElementsByTagName("mote").getLength(); j++) {
+            Element moteElement = (Element) inputProfileElement.getElementsByTagName("mote").item(j);
+
+            moteProbabilities.put(Integer.valueOf(getTagValue(moteElement, "moteNumber")) - 1,
+                    Double.parseDouble(getTagValue(moteElement, "activityProbability")));
+        }
+        return moteProbabilities;
     }
 
     private HashMap<String, AdaptationGoal> getAdaptationGoals(Element inputProfileElement) {
@@ -964,15 +1041,15 @@ public class MainGUI extends JFrame {
         HashMap<String, AdaptationGoal> adaptationGoalHashMap = new HashMap<>();
         for (int j = 0; j < QoSElement.getElementsByTagName("adaptationGoal").getLength(); j++) {
             Element adaptationGoalElement = (Element) QoSElement.getElementsByTagName("adaptationGoal").item(j);
-            String goalName = adaptationGoalElement.getElementsByTagName("name").item(0).getTextContent();
+            String goalName = getTagValue(adaptationGoalElement, "name");
             AdaptationGoal adaptationGoal = new ThresholdAdaptationGoal(0.0);
             if (adaptationGoalElement.getAttribute("type").equals("interval")) {
-                Double upperValue = Double.valueOf(adaptationGoalElement.getElementsByTagName("upperValue").item(0).getTextContent());
-                Double lowerValue = Double.valueOf(adaptationGoalElement.getElementsByTagName("lowerValue").item(0).getTextContent());
+                Double upperValue = Double.valueOf(getTagValue(adaptationGoalElement, "upperValue"));
+                Double lowerValue = Double.valueOf(getTagValue(adaptationGoalElement, "lowerValue"));
                 adaptationGoal = new IntervalAdaptationGoal(lowerValue, upperValue);
             }
             if (adaptationGoalElement.getAttribute("type").equals("threshold")) {
-                Double threshold = Double.valueOf(adaptationGoalElement.getElementsByTagName("threshold").item(0).getTextContent());
+                Double threshold = Double.valueOf(getTagValue(adaptationGoalElement, "threshold"));
                 adaptationGoal = new ThresholdAdaptationGoal(threshold);
             }
             adaptationGoalHashMap.put(goalName, adaptationGoal);
@@ -980,7 +1057,7 @@ public class MainGUI extends JFrame {
         return adaptationGoalHashMap;
     }
 
-    private void updateInputProfile(LinkedList<InputProfile> inputProfiles) {
+    private void updateInputProfile(LinkedList<AgingInputProfile> inputProfiles) {
         InputProfilePanel.removeAll();
         GridBagConstraints constraints = new GridBagConstraints();
         constraints.gridx = 0;
@@ -989,7 +1066,7 @@ public class MainGUI extends JFrame {
         constraints.weighty = 0;
         JPanel panel;
 
-        for (InputProfile inputProfile : getInputProfiles()) {
+        for (AgingInputProfile inputProfile : getInputProfiles()) {
             panel = new JPanel(new BorderLayout());
             panel.setPreferredSize(new Dimension(InputProfilePanel.getWidth() - 10, 50));
             panel.setBackground(Color.white);
@@ -1665,9 +1742,9 @@ public class MainGUI extends JFrame {
 
     private class InputProfileEditMouse extends MouseAdapter {
 
-        private InputProfile inputProfile;
+        private AgingInputProfile inputProfile;
 
-        public InputProfileEditMouse(InputProfile inputProfile) {
+        public InputProfileEditMouse(AgingInputProfile inputProfile) {
             this.inputProfile = inputProfile;
         }
 

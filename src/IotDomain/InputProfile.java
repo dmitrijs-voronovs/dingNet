@@ -22,38 +22,38 @@ public class InputProfile {
     /**
      * The name of the input profile.
      */
-    private String name;
+    protected String name;
     /**
      * A quality of service profile for this inputProfile
      */
-    private QualityOfService qualityOfServiceProfile;
+    protected QualityOfService qualityOfServiceProfile;
 
     /**
      * The number of runs in this inputProfile
      */
-    private Integer numberOfRuns;
+    protected Integer numberOfRuns;
 
     /**
      * The probabilities for the motes to run a certain path.
      */
-    private HashMap<Integer,Double> probabilitiesForMotes;
+    protected HashMap<Integer,Double> probabilitiesForMotes;
 
     /**
      * The probabilities for the gateways to work.
      */
-    private HashMap<Integer,Double> probabilitiesForGateways;
+    protected HashMap<Integer,Double> probabilitiesForGateways;
     /**
      * Other probabilities chosen for the simulation
      */
-    private HashMap<Integer,Double> regionProbabilities;
+    protected HashMap<Integer,Double> regionProbabilities;
     /**
      * The source Document of the profile.
      */
-    private Document xmlSource;
+    protected Document xmlSource;
     /**
      * The gui on which the inputProfile is displayed.
      */
-    private MainGUI gui;
+    protected MainGUI gui;
 
     /**
      * Generates InputProfile with a given qualityOfServiceProfile, numberOfRuns, probabilitiesForMotes, probabilitiesForGateways,
@@ -66,11 +66,14 @@ public class InputProfile {
      * @param xmlSource The source of the InputProfile.
      * @param gui The MainGUI displaying the input profiles.
      */
-    public InputProfile(String name, QualityOfService qualityOfServiceProfile,
+    public InputProfile(String name,
+                        QualityOfService qualityOfServiceProfile,
                         Integer numberOfRuns,
                         HashMap<Integer, Double> probabilitiesForMotes,
-                        HashMap<Integer, Double> probabilitiesForGateways, HashMap<Integer, Double> regionProbabilities,
-                        Element xmlSource, MainGUI gui){
+                        HashMap<Integer, Double> probabilitiesForGateways,
+                        HashMap<Integer, Double> regionProbabilities,
+                        Element xmlSource,
+                        MainGUI gui){
         this.name = name;
         this.qualityOfServiceProfile = qualityOfServiceProfile;
         this.numberOfRuns =numberOfRuns;
@@ -240,7 +243,7 @@ public class InputProfile {
     /**
      * A function which updates the source file.
      */
-    private void updateFile(){
+    protected void updateFile(){
         Document doc = getXmlSource();
         for(int i =0 ; i<doc.getChildNodes().getLength();){
             doc.removeChild(doc.getChildNodes().item(0));
