@@ -2,6 +2,7 @@ package IotDomain;
 
 import GUI.MainGUI;
 import SelfAdaptation.FeedbackLoop.GenericFeedbackLoop;
+import SelfAdaptation.FeedbackLoop.utils.AgingAdjustmentCalculator;
 
 import java.time.LocalTime;
 import java.util.HashMap;
@@ -201,6 +202,14 @@ public class Simulation implements Runnable {
     private void prepareSimulation() {
         // reset the environment.
         getEnvironment().reset();
+
+        InputProfileDetails inputProfileDetails = inputProfile.getInputProfileDetails();
+        getEnvironment().setAgingAdjustmentCalculator(new AgingAdjustmentCalculator(inputProfileDetails.getDeviceLifespanDuration(),
+                inputProfileDetails.getSimulationStepTimeDuration(),
+                inputProfileDetails.getAgingCompensationCoefficient()));
+
+        getApproach().setup(inputProfile);
+
         //Check if a mote can participate in this run.
         enableMotes();
     }
@@ -211,7 +220,7 @@ public class Simulation implements Runnable {
     }
 
     private void increaseMotesAge() {
-        getActiveMotesStream().forEach(AgingMote::increaseAge);
+        getActiveMotesStream().forEach(m -> m.increaseAge(inputProfile.getInputProfileDetails().getSimulationStepTimeDuration()));
         getActiveMotesStream().forEach(m -> m.addAgingFactor(getEnvironment().getAgingAdjustmentCalculator().getAgingFactorUnit()));
     }
 

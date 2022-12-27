@@ -32,7 +32,7 @@ public class Environment implements Serializable {
     /**
      * calculator for device aging adjustment
      */
-    private final AgingAdjustmentCalculator agingAdjustmentCalculator;
+    private AgingAdjustmentCalculator agingAdjustmentCalculator;
     /**
      * A list containing all motes currently active on the map.
      */
@@ -94,9 +94,6 @@ public class Environment implements Serializable {
         this.MQTTServer = new MQTTServer();
         this.wayPoints = wayPoints;
         numberOfRuns = 1;
-        agingAdjustmentCalculator = new AgingAdjustmentCalculator(Constants.DEVICE_LIFESPAN,
-                Constants.SIMULATION_STEP_TIME,
-                Constants.AGING_COMPENSATION_COEFFICIENT);
     }
 
     /**
@@ -438,6 +435,10 @@ public class Environment implements Serializable {
 
     public AgingAdjustmentCalculator getAgingAdjustmentCalculator() {
         return agingAdjustmentCalculator;
+    }
+
+    public void setAgingAdjustmentCalculator(AgingAdjustmentCalculator agingAdjustmentCalculator) {
+        this.agingAdjustmentCalculator = agingAdjustmentCalculator;
     }
 }
 

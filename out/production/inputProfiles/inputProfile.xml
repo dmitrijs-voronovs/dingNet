@@ -7,7 +7,7 @@
         <deviceAdjustmentRateUnit>months</deviceAdjustmentRateUnit>
         <agingCompensationCoefficient>0.95</agingCompensationCoefficient>
         <energyAdjustmentMultiplier>300</energyAdjustmentMultiplier>
-        <deviceLifespan>20</deviceLifespan>
+        <deviceLifespan>6</deviceLifespan>
         <deviceLifespanUnit>years</deviceLifespanUnit>
         <simulationBeginning>2022-01-01</simulationBeginning>
         <simulationStepTime>30</simulationStepTime>

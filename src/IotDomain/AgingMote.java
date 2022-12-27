@@ -77,8 +77,8 @@ public class AgingMote extends Mote {
         this.age = age;
     }
 
-    public void increaseAge() {
-        setAge(age.plus(Constants.SIMULATION_STEP_TIME));
+    public void increaseAge(Duration period) {
+        setAge(age.plus(period));
     }
 
     public AgingMote(Long DevEUI, Integer xPos, Integer yPos, Environment environment, Integer transmissionPower, Integer SF, LinkedList<MoteSensor> moteSensors, Integer energyLevel, LinkedList<GeoPosition> path, Integer samplingRate, Double movementSpeed, Integer startOffset, Duration initialAge) {
