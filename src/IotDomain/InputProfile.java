@@ -127,7 +127,6 @@ public class InputProfile {
      */
     public void setNumberOfRuns(Integer numberOfRuns) {
         this.numberOfRuns = numberOfRuns;
-        updateFile();
     }
 
     /**
@@ -158,7 +157,6 @@ public class InputProfile {
      */
     public void putProbabilitiyForMote(Integer moteNumber, Double probability) {
         this.probabilitiesForMotes.put(moteNumber,probability);
-        updateFile();
     }
 
     /**
@@ -243,7 +241,7 @@ public class InputProfile {
     /**
      * A function which updates the source file.
      */
-    protected void updateFile(){
+    public void updateFile(){
         Document doc = getXmlSource();
         for(int i =0 ; i<doc.getChildNodes().getLength();){
             doc.removeChild(doc.getChildNodes().item(0));
@@ -259,6 +257,36 @@ public class InputProfile {
         numberOfRuns.appendChild(doc.createTextNode(getNumberOfRuns().toString()));
         inputProfileElement.appendChild(numberOfRuns);
 
+        createInputProfileNodeExtension(inputProfileElement);
+
+        inputProfileElement.appendChild(createQoSNode(doc));
+        inputProfileElement.appendChild(createMoteProbabilitiesNode(doc));
+        gui.updateInputProfilesFile();
+    }
+
+    protected void createInputProfileNodeExtension(Element inputProfileElement) {}
+
+    protected Element createMoteProbabilitiesNode(Document doc) {
+        Element moteProbabilities = doc.createElement("moteProbabilities");
+        for(int moteNumber : getProbabilitiesForMotesKeys()){
+            Element moteElement = doc.createElement("mote");
+            Element moteNumberElement = doc.createElement("moteNumber");
+            moteNumberElement.appendChild(doc.createTextNode(Integer.toString(moteNumber+1)));
+            moteElement.appendChild(moteNumberElement);
+            Element activityProbability = doc.createElement("activityProbability");
+            activityProbability.appendChild(doc.createTextNode(getProbabilityForMote(moteNumber).toString()));
+            moteElement.appendChild(activityProbability);
+
+            createMoteNodeExtension(moteElement, moteNumber);
+            moteProbabilities.appendChild(moteElement);
+
+        }
+        return moteProbabilities;
+    }
+
+    protected void createMoteNodeExtension(Element moteElement, int moteNumber) {}
+
+    protected Element createQoSNode(Document doc) {
         Element Qos = doc.createElement("QoS");
 
         for(String goalName : getQualityOfServiceProfile().getNames()) {
@@ -285,25 +313,7 @@ public class InputProfile {
             }
             Qos.appendChild(adaptationGoalElement);
         }
-
-
-        inputProfileElement.appendChild(Qos);
-
-        Element moteProbabilaties = doc.createElement("moteProbabilaties");
-        for(Integer moteNumber : getProbabilitiesForMotesKeys()){
-            Element moteElement = doc.createElement("mote");
-            Element moteNumberElement = doc.createElement("moteNumber");
-            moteNumberElement.appendChild(doc.createTextNode(Integer.toString(moteNumber+1)));
-            moteElement.appendChild(moteNumberElement);
-            Element activityProbability = doc.createElement("activityProbability");
-            activityProbability.appendChild(doc.createTextNode(getProbabilityForMote(moteNumber).toString()));
-            moteElement.appendChild(activityProbability);
-            moteProbabilaties.appendChild(moteElement);
-
-        }
-        inputProfileElement.appendChild(moteProbabilaties);
-        gui.updateInputProfilesFile();
-
+        return Qos;
     }
 
     /**
