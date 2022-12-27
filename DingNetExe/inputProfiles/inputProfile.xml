@@ -4,14 +4,14 @@
         <name>ReliableEfficient</name>
         <numberOfRuns>10</numberOfRuns>
         <deviceAdjustmentRate>1</deviceAdjustmentRate>
-        <deviceAdjustmentRateUnit>MONTHS</deviceAdjustmentRateUnit>
+        <deviceAdjustmentRateUnit>months</deviceAdjustmentRateUnit>
         <agingCompensationCoefficient>0.95</agingCompensationCoefficient>
         <energyAdjustmentMultiplier>300</energyAdjustmentMultiplier>
         <deviceLifespan>20</deviceLifespan>
-        <deviceLifespanUnit>YEARS</deviceLifespanUnit>
+        <deviceLifespanUnit>years</deviceLifespanUnit>
         <simulationBeginning>2022-01-01</simulationBeginning>
         <simulationStepTime>30</simulationStepTime>
-        <simulationStepTimeUnit>MINUTES</simulationStepTimeUnit>
+        <simulationStepTimeUnit>minutes</simulationStepTimeUnit>
         <QoS>
             <adaptationGoal type="interval">
                 <name>reliableCommunication</name>
@@ -24,56 +24,56 @@
                 <moteNumber>1</moteNumber>
                 <activityProbability>0.7</activityProbability>
                 <initialAge>1</initialAge>
-                <initialAgeUnit>HOURS</initialAgeUnit>
-                <adaptationWasApplied>true</adaptationWasApplied>
+                <initialAgeUnit>hours</initialAgeUnit>
+                <adaptationWasApplied>false</adaptationWasApplied>
             </mote>
             <mote>
                 <moteNumber>0</moteNumber>
                 <activityProbability>1.0</activityProbability>
-                <initialAge>1</initialAge>
-                <initialAgeUnit>HOURS</initialAgeUnit>
+                <initialAge>5</initialAge>
+                <initialAgeUnit>years</initialAgeUnit>
                 <adaptationWasApplied>true</adaptationWasApplied>
             </mote>
             <mote>
                 <moteNumber>2</moteNumber>
                 <activityProbability>1.0</activityProbability>
                 <initialAge>1</initialAge>
-                <initialAgeUnit>HOURS</initialAgeUnit>
+                <initialAgeUnit>months</initialAgeUnit>
                 <adaptationWasApplied>true</adaptationWasApplied>
             </mote>
             <mote>
                 <moteNumber>3</moteNumber>
                 <activityProbability>0.86</activityProbability>
                 <initialAge>1</initialAge>
-                <initialAgeUnit>HOURS</initialAgeUnit>
+                <initialAgeUnit>seconds</initialAgeUnit>
                 <adaptationWasApplied>true</adaptationWasApplied>
             </mote>
             <mote>
                 <moteNumber>4</moteNumber>
                 <activityProbability>1.0</activityProbability>
                 <initialAge>1</initialAge>
-                <initialAgeUnit>HOURS</initialAgeUnit>
+                <initialAgeUnit>hours</initialAgeUnit>
                 <adaptationWasApplied>true</adaptationWasApplied>
             </mote>
             <mote>
                 <moteNumber>5</moteNumber>
                 <activityProbability>1.0</activityProbability>
                 <initialAge>1</initialAge>
-                <initialAgeUnit>HOURS</initialAgeUnit>
+                <initialAgeUnit>years</initialAgeUnit>
                 <adaptationWasApplied>true</adaptationWasApplied>
             </mote>
             <mote>
                 <moteNumber>6</moteNumber>
                 <activityProbability>1.0</activityProbability>
                 <initialAge>1</initialAge>
-                <initialAgeUnit>HOURS</initialAgeUnit>
+                <initialAgeUnit>weeks</initialAgeUnit>
                 <adaptationWasApplied>true</adaptationWasApplied>
             </mote>
             <mote>
                 <moteNumber>7</moteNumber>
                 <activityProbability>1.0</activityProbability>
                 <initialAge>1</initialAge>
-                <initialAgeUnit>HOURS</initialAgeUnit>
+                <initialAgeUnit>months</initialAgeUnit>
                 <adaptationWasApplied>true</adaptationWasApplied>
             </mote>
         </moteProbabilaties>
@@ -82,14 +82,14 @@
         <name>ReliableEfficientOpen</name>
         <numberOfRuns>10</numberOfRuns>
         <deviceAdjustmentRate>1</deviceAdjustmentRate>
-        <deviceAdjustmentRateUnit>MONTHS</deviceAdjustmentRateUnit>
+        <deviceAdjustmentRateUnit>months</deviceAdjustmentRateUnit>
         <agingCompensationCoefficient>0.95</agingCompensationCoefficient>
         <energyAdjustmentMultiplier>300</energyAdjustmentMultiplier>
         <deviceLifespan>20</deviceLifespan>
-        <deviceLifespanUnit>YEARS</deviceLifespanUnit>
+        <deviceLifespanUnit>years</deviceLifespanUnit>
         <simulationBeginning>2022-01-01</simulationBeginning>
         <simulationStepTime>30</simulationStepTime>
-        <simulationStepTimeUnit>MINUTES</simulationStepTimeUnit>
+        <simulationStepTimeUnit>minutes</simulationStepTimeUnit>
         <QoS>
             <adaptationGoal type="interval">
                 <name>reliableCommunication</name>
@@ -102,21 +102,21 @@
                 <moteNumber>1</moteNumber>
                 <activityProbability>1.0</activityProbability>
                 <initialAge>1</initialAge>
-                <initialAgeUnit>HOURS</initialAgeUnit>
+                <initialAgeUnit>hours</initialAgeUnit>
                 <adaptationWasApplied>true</adaptationWasApplied>
             </mote>
             <mote>
                 <moteNumber>2</moteNumber>
                 <activityProbability>1.0</activityProbability>
                 <initialAge>1</initialAge>
-                <initialAgeUnit>HOURS</initialAgeUnit>
+                <initialAgeUnit>hours</initialAgeUnit>
                 <adaptationWasApplied>true</adaptationWasApplied>
             </mote>
             <mote>
                 <moteNumber>3</moteNumber>
                 <activityProbability>1.0</activityProbability>
                 <initialAge>1</initialAge>
-                <initialAgeUnit>HOURS</initialAgeUnit>
+                <initialAgeUnit>hours</initialAgeUnit>
                 <adaptationWasApplied>true</adaptationWasApplied>
             </mote>
         </moteProbabilaties>

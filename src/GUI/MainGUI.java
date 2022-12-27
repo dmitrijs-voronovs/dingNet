@@ -67,9 +67,6 @@ import java.awt.image.FilteredImageSource;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.sql.Date;
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.*;
 import java.util.stream.IntStream;
@@ -964,27 +961,16 @@ public class MainGUI extends JFrame {
         return new InputProfileDetails(
             parseFloat(getTagValue(inputProfileElement, "agingCompensationCoefficient"), Constants.AGING_COMPENSATION_COEFFICIENT),
             parseFloat(getTagValue(inputProfileElement, "energyAdjustmentMultiplier"), Constants.ENERGY_ADJUSTMENT_MULTIPLIER),
-            parseCalendar(inputProfileElement, "simulationBeginning", Constants.SIMULATION_BEGINNING),
-            getDurationFromXml(inputProfileElement, "deviceAdjustmentRate", "deviceAdjustmentRateUnit"),
-            getDurationFromXml(inputProfileElement, "deviceLifespan", "deviceLifespanUnit"),
-            getDurationFromXml(inputProfileElement, "simulationStepTime", "simulationStepTimeUnit")
+            getTagValue(inputProfileElement, "simulationBeginning"),
+            getDurationPairFromXml(inputProfileElement, "deviceAdjustmentRate", "deviceAdjustmentRateUnit"),
+            getDurationPairFromXml(inputProfileElement, "deviceLifespan", "deviceLifespanUnit"),
+            getDurationPairFromXml(inputProfileElement, "simulationStepTime", "simulationStepTimeUnit")
         );
     }
 
     private float parseFloat(String value, float defaultValue) {
         try {
             return Float.parseFloat(value);
-        } catch (Exception e) {
-            return defaultValue;
-        }
-    }
-
-    private Calendar parseCalendar(Element element, String tagName, Calendar defaultValue) {
-        try {
-            String value = getTagValue(element, tagName);
-            Calendar calendar = Calendar.getInstance();
-            calendar.setTime(Date.valueOf(value));
-            return calendar;
         } catch (Exception e) {
             return defaultValue;
         }
@@ -1004,17 +990,13 @@ public class MainGUI extends JFrame {
     private AgingMoteInputProfile getMoteInputProfile(Element moteElement) {
         return new AgingMoteInputProfile(
                 Double.parseDouble(getTagValue(moteElement, "activityProbability")),
-                getDurationFromXml(moteElement, "initialAge", "initialAgeUnit"),
+                getDurationPairFromXml(moteElement, "initialAge", "initialAgeUnit"),
                 Boolean.parseBoolean(getTagValue(moteElement, "adaptationWasApplied"))
         );
     }
 
-    private Duration getDurationFromXml(Element element, String durationValueTagName, String durationUnitTagName) {
-        return parseDuration(Long.parseLong(getTagValue(element, durationValueTagName)), getTagValue(element, durationUnitTagName));
-    }
-
-    private Duration parseDuration(long initialAgeN, String initialAgeUnit) {
-        return ChronoUnit.valueOf(initialAgeUnit.toUpperCase()).getDuration().multipliedBy(initialAgeN);
+    private Pair<Long, String> getDurationPairFromXml(Element element, String durationValueTagName, String durationUnitTagName) {
+        return new Pair<>(Long.parseLong(getTagValue(element, durationValueTagName)), getTagValue(element, durationUnitTagName));
     }
 
     public String getTagValue(Element element, String tagName) {
@@ -1023,17 +1005,6 @@ public class MainGUI extends JFrame {
 
     public String getTagValue(Element element, String tagName, int idx) {
         return element.getElementsByTagName(tagName).item(idx).getTextContent();
-    }
-
-    private HashMap<Integer, Double> getMoteProbabilities(Element inputProfileElement) {
-        HashMap<Integer, Double> moteProbabilities = new HashMap<>();
-        for (int j = 0; j < inputProfileElement.getElementsByTagName("mote").getLength(); j++) {
-            Element moteElement = (Element) inputProfileElement.getElementsByTagName("mote").item(j);
-
-            moteProbabilities.put(Integer.valueOf(getTagValue(moteElement, "moteNumber")) - 1,
-                    Double.parseDouble(getTagValue(moteElement, "activityProbability")));
-        }
-        return moteProbabilities;
     }
 
     private HashMap<String, AdaptationGoal> getAdaptationGoals(Element inputProfileElement) {
@@ -1754,8 +1725,8 @@ public class MainGUI extends JFrame {
                 JFrame frame = new JFrame("Edit input profile");
                 EditInputProfileGUI EditInputProfileGUI = new EditInputProfileGUI(inputProfile, simulation.getEnvironment());
                 frame.setContentPane(EditInputProfileGUI.getMainPanel());
-                frame.setPreferredSize(new Dimension(750, 400));
-                frame.setMinimumSize(new Dimension(750, 400));
+                frame.setPreferredSize(new Dimension(750, 750));
+                frame.setMinimumSize(new Dimension(750, 750));
                 frame.setVisible(true);
             } else {
                 JOptionPane.showMessageDialog(null, "Load a configuration before editing an input profile", "InfoBox: " + "Edit InputProfile", JOptionPane.INFORMATION_MESSAGE);

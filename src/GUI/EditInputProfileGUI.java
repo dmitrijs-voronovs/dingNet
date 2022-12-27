@@ -1,6 +1,7 @@
 package GUI;
 
 import IotDomain.AgingInputProfile;
+import IotDomain.AgingMoteInputProfile;
 import IotDomain.Environment;
 import IotDomain.Mote;
 import com.intellij.uiDesigner.core.GridConstraints;
@@ -54,6 +55,7 @@ public class EditInputProfileGUI {
     public EditInputProfileGUI(AgingInputProfile inputProfile, Environment environment) {
         this.inputProfile = inputProfile;
         this.environment = environment;
+        setConstants();
         refresh();
 
         classSaveButton.addActionListener(new ActionListener() {
@@ -66,22 +68,27 @@ public class EditInputProfileGUI {
         updateMoteButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                inputProfile.putProbabilitiyForMote(moteNumberComboBox.getSelectedIndex(), (Double) moteProbSpinner.getValue());
+                inputProfile.putProbabilitiyForMote(getSelectedMote(), (Double) moteProbSpinner.getValue());
                 refresh();
             }
         });
         moteNumberComboBox.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (inputProfile.getProbabilitiesForMotesKeys().contains((moteNumberComboBox.getSelectedIndex()))) {
-                    moteProbSpinner.setValue(inputProfile.getProbabilityForMote(moteNumberComboBox.getSelectedIndex()));
+                if (inputProfile.getProbabilitiesForMotesKeys().contains(getSelectedMote())) {
+                    refreshMoteFields();
                 } else {
                     moteProbSpinner.setValue(1.00);
-                    inputProfile.putProbabilitiyForMote(moteNumberComboBox.getSelectedIndex(), (Double) moteProbSpinner.getValue());
+                    inputProfile.putProbabilitiyForMote(getSelectedMote(), (Double) moteProbSpinner.getValue());
                     refresh();
                 }
             }
         });
+    }
+
+    private void setConstants() {
+        deviceAdjustmentRate.setValue(1);
+        deviceAdjustmentRateUnit.setSelectedItem("months");
     }
 
     private void refresh() {
@@ -102,20 +109,55 @@ public class EditInputProfileGUI {
         QOSLabel.setText(inputProfile.getName());
         if (environment != null) {
             numberOfRoundsComboBox.setSelectedItem(inputProfile.getNumberOfRuns().toString());
+            refreshSimulationDetails();
         }
-        Integer moteNumValue = 0;
 
         if (environment != null) {
             moteNumberComboBox.removeAllItems();
             for (Mote mote : environment.getMotes()) {
                 moteNumberComboBox.addItem("Mote " + (environment.getMotes().indexOf(mote) + 1));
             }
-            moteNumberComboBox.setSelectedIndex(moteNumValue);
+            moteNumberComboBox.setSelectedIndex(0);
         } else {
             moteNumberComboBox.removeAllItems();
         }
-        moteProbSpinner.setModel(new SpinnerNumberModel(inputProfile.getProbabilityForMote(moteNumberComboBox.getSelectedIndex()), Double.valueOf(0), Double.valueOf(1), Double.valueOf(0.01)));
+        refreshMoteFields();
+    }
 
+    private void refreshMoteFields() {
+        moteProbSpinner.setModel(createSpinnerCoefficientModel(inputProfile.getProbabilityForMote(getSelectedMote())));
+        AgingMoteInputProfile selectedMoteInputProfile = inputProfile.getMoteInputProfile(getSelectedMote());
+        initialAge.setModel(createSpinnerDurationModel((double) selectedMoteInputProfile.getInitialAge().getLeft()));
+        initialAgeUnit.setSelectedItem(selectedMoteInputProfile.getInitialAge().getRight());
+        adaptationWasApplied.setSelected(selectedMoteInputProfile.wasAdaptationApplied());
+    }
+
+    private int getSelectedMote() {
+        return moteNumberComboBox.getSelectedIndex();
+    }
+
+    private void refreshSimulationDetails() {
+        deviceLifespan.setModel(createSpinnerDurationModel((double) inputProfile.getInputProfileDetails().getDeviceLifespan().getLeft()));
+        deviceLifespanUnit.setSelectedItem(inputProfile.getInputProfileDetails().getDeviceLifespan().getRight());
+        simulationStepTime.setModel(createSpinnerDurationModel((double) inputProfile.getInputProfileDetails().getSimulationStepTime().getLeft()));
+        simulationStepTimeUnit.setSelectedItem(inputProfile.getInputProfileDetails().getSimulationStepTime().getRight());
+        simulationBeginning.setText(inputProfile.getInputProfileDetails().getSimulationBeginning());
+        agingCompensationCoefficient.setModel(createSpinnerCoefficientModel(inputProfile.getInputProfileDetails().getAgingCompensationCoefficient()));
+        energyAdjustmentMultiplier.setModel(createSpinnerDurationModel(inputProfile.getInputProfileDetails().getEnergyAdjustmentMultiplier()));
+    }
+
+    private SpinnerNumberModel createSpinnerDurationModel(double value) {
+        return new SpinnerNumberModel(value,
+                0.0,
+                999999999.0,
+                1.0);
+    }
+
+    private SpinnerNumberModel createSpinnerCoefficientModel(double value) {
+        return new SpinnerNumberModel(value,
+                0.0,
+                1.0,
+                0.01);
     }
 
     public JPanel getMainPanel() {
@@ -322,7 +364,7 @@ public class EditInputProfileGUI {
         simulationStepTimeUnit.setModel(defaultComboBoxModel6);
         panel1.add(simulationStepTimeUnit, new GridConstraints(6, 3, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final Spacer spacer5 = new Spacer();
-        panel1.add(spacer5, new GridConstraints(10, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+        panel1.add(spacer5, new GridConstraints(10, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, new Dimension(-1, 1), null, null, 0, false));
     }
 
     /**
