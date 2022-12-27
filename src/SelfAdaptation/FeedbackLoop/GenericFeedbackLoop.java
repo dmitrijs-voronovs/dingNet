@@ -1,5 +1,6 @@
 package SelfAdaptation.FeedbackLoop;
 
+import IotDomain.AgingInputProfile;
 import IotDomain.AgingMote;
 import IotDomain.Gateway;
 import SelfAdaptation.Instrumentation.AgingMoteEffector;
@@ -39,6 +40,10 @@ public abstract class GenericFeedbackLoop {
      */
     public abstract void adapt(AgingMote mote, Gateway dataGateway);
 
+    public void setup(AgingInputProfile agingInputProfile){
+        this.agingInputProfile = agingInputProfile;
+    };
+
     /**
      * A method to activate the feedback loop.
      */
@@ -59,6 +64,12 @@ public abstract class GenericFeedbackLoop {
      */
     public Boolean isActive() {
         return active;
+    }
+
+    protected AgingInputProfile agingInputProfile;
+
+    public AgingInputProfile getAgingInputProfile() {
+        return agingInputProfile;
     }
 
     /**
