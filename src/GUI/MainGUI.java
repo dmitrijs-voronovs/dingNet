@@ -153,7 +153,7 @@ public class MainGUI extends JFrame {
 
 
         simulation = new Simulation(this);
-        inputProfiles = loadInputProfiles();
+        inputProfiles = loadInputProfilesFromFile();
         updateInputProfile(inputProfiles);
         updateAdaptationGoals();
 
@@ -914,7 +914,7 @@ public class MainGUI extends JFrame {
 
     }
 
-    private LinkedList<InputProfile> loadInputProfiles() {
+    private LinkedList<InputProfile> loadInputProfilesFromFile() {
         LinkedList<InputProfile> inputProfiles = new LinkedList<>();
         try {
             File file = new File(MainGUI.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
@@ -922,37 +922,7 @@ public class MainGUI extends JFrame {
             DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
             DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
             Document doc = docBuilder.parse(file);
-            Element inputProfilesElement = doc.getDocumentElement();
-            for (int i = 0; i < inputProfilesElement.getElementsByTagName("inputProfile").getLength(); i++) {
-                Element inputProfileElement = (Element) inputProfilesElement.getElementsByTagName("inputProfile").item(i);
-                String name = inputProfileElement.getElementsByTagName("name").item(0).getTextContent();
-                Integer numberOfRuns = Integer.valueOf(inputProfileElement.getElementsByTagName("numberOfRuns").item(0).getTextContent());
-                Element QoSElement = (Element) inputProfileElement.getElementsByTagName("QoS").item(0);
-                HashMap<String, AdaptationGoal> adaptationGoalHashMap = new HashMap<>();
-                for (int j = 0; j < QoSElement.getElementsByTagName("adaptationGoal").getLength(); j++) {
-                    Element adaptationGoalElement = (Element) QoSElement.getElementsByTagName("adaptationGoal").item(j);
-                    String goalName = adaptationGoalElement.getElementsByTagName("name").item(0).getTextContent();
-                    AdaptationGoal adaptationGoal = new ThresholdAdaptationGoal(0.0);
-                    if (adaptationGoalElement.getAttribute("type").equals("interval")) {
-                        Double upperValue = Double.valueOf(adaptationGoalElement.getElementsByTagName("upperValue").item(0).getTextContent());
-                        Double lowerValue = Double.valueOf(adaptationGoalElement.getElementsByTagName("lowerValue").item(0).getTextContent());
-                        adaptationGoal = new IntervalAdaptationGoal(lowerValue, upperValue);
-                    }
-                    if (adaptationGoalElement.getAttribute("type").equals("threshold")) {
-                        Double threshold = Double.valueOf(adaptationGoalElement.getElementsByTagName("threshold").item(0).getTextContent());
-                        adaptationGoal = new ThresholdAdaptationGoal(threshold);
-                    }
-                    adaptationGoalHashMap.put(goalName, adaptationGoal);
-                }
-                HashMap<Integer, Double> moteProbabilaties = new HashMap<>();
-                for (int j = 0; j < inputProfileElement.getElementsByTagName("mote").getLength(); j++) {
-                    Element moteElement = (Element) inputProfileElement.getElementsByTagName("mote").item(j);
-
-                    moteProbabilaties.put(Integer.valueOf(moteElement.getElementsByTagName("moteNumber").item(0).getTextContent()) - 1, Double.parseDouble(moteElement.getElementsByTagName("activityProbability").item(0).getTextContent()));
-                }
-
-                inputProfiles.add(new InputProfile(name, new QualityOfService(adaptationGoalHashMap), numberOfRuns, moteProbabilaties, new HashMap<>(), new HashMap<>(), inputProfileElement, this));
-            }
+            loadInputProfiles(inputProfiles, doc);
         } catch (ParserConfigurationException e) {
             e.printStackTrace();
         } catch (SAXException e) {
@@ -964,6 +934,50 @@ public class MainGUI extends JFrame {
         }
         return inputProfiles;
 
+    }
+
+    private void loadInputProfiles(LinkedList<InputProfile> inputProfiles, Document doc) {
+        Element inputProfilesElement = doc.getDocumentElement();
+        for (int i = 0; i < inputProfilesElement.getElementsByTagName("inputProfile").getLength(); i++) {
+            Element inputProfileElement = (Element) inputProfilesElement.getElementsByTagName("inputProfile").item(i);
+            String name = inputProfileElement.getElementsByTagName("name").item(0).getTextContent();
+            Integer numberOfRuns = Integer.valueOf(inputProfileElement.getElementsByTagName("numberOfRuns").item(0).getTextContent());
+            HashMap<String, AdaptationGoal> adaptationGoalHashMap = getAdaptationGoals(inputProfileElement);
+            HashMap<Integer, Double> moteProbabilities = getMoteProbabilities(inputProfileElement);
+
+            inputProfiles.add(new InputProfile(name, new QualityOfService(adaptationGoalHashMap), numberOfRuns, moteProbabilities, new HashMap<>(), new HashMap<>(), inputProfileElement, this));
+        }
+    }
+
+    private HashMap<Integer, Double> getMoteProbabilities(Element inputProfileElement) {
+        HashMap<Integer, Double> moteProbabilaties = new HashMap<>();
+        for (int j = 0; j < inputProfileElement.getElementsByTagName("mote").getLength(); j++) {
+            Element moteElement = (Element) inputProfileElement.getElementsByTagName("mote").item(j);
+
+            moteProbabilaties.put(Integer.valueOf(moteElement.getElementsByTagName("moteNumber").item(0).getTextContent()) - 1, Double.parseDouble(moteElement.getElementsByTagName("activityProbability").item(0).getTextContent()));
+        }
+        return moteProbabilaties;
+    }
+
+    private HashMap<String, AdaptationGoal> getAdaptationGoals(Element inputProfileElement) {
+        Element QoSElement = (Element) inputProfileElement.getElementsByTagName("QoS").item(0);
+        HashMap<String, AdaptationGoal> adaptationGoalHashMap = new HashMap<>();
+        for (int j = 0; j < QoSElement.getElementsByTagName("adaptationGoal").getLength(); j++) {
+            Element adaptationGoalElement = (Element) QoSElement.getElementsByTagName("adaptationGoal").item(j);
+            String goalName = adaptationGoalElement.getElementsByTagName("name").item(0).getTextContent();
+            AdaptationGoal adaptationGoal = new ThresholdAdaptationGoal(0.0);
+            if (adaptationGoalElement.getAttribute("type").equals("interval")) {
+                Double upperValue = Double.valueOf(adaptationGoalElement.getElementsByTagName("upperValue").item(0).getTextContent());
+                Double lowerValue = Double.valueOf(adaptationGoalElement.getElementsByTagName("lowerValue").item(0).getTextContent());
+                adaptationGoal = new IntervalAdaptationGoal(lowerValue, upperValue);
+            }
+            if (adaptationGoalElement.getAttribute("type").equals("threshold")) {
+                Double threshold = Double.valueOf(adaptationGoalElement.getElementsByTagName("threshold").item(0).getTextContent());
+                adaptationGoal = new ThresholdAdaptationGoal(threshold);
+            }
+            adaptationGoalHashMap.put(goalName, adaptationGoal);
+        }
+        return adaptationGoalHashMap;
     }
 
     private void updateInputProfile(LinkedList<InputProfile> inputProfiles) {
