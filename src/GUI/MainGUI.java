@@ -1736,9 +1736,9 @@ public class MainGUI extends JFrame {
 
     private class InputProfileSelectMouse extends MouseAdapter {
 
-        private InputProfile inputProfile;
+        private AgingInputProfile inputProfile;
 
-        public InputProfileSelectMouse(InputProfile inputProfile) {
+        public InputProfileSelectMouse(AgingInputProfile inputProfile) {
             this.inputProfile = inputProfile;
         }
 

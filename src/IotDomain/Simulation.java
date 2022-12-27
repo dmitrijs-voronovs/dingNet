@@ -17,7 +17,7 @@ public class Simulation implements Runnable {
     /**
      * The InputProfile used in the simulation.
      */
-    private InputProfile inputProfile;
+    private AgingInputProfile inputProfile;
     /**
      * The Environment used in th simulation.
      */
@@ -38,7 +38,7 @@ public class Simulation implements Runnable {
      * @param approach The GenericFeedbackLoop to use.
      * @param gui The MainGUI to use.
      */
-    public Simulation(InputProfile inputProfile, Environment environment, GenericFeedbackLoop approach, MainGUI gui){
+    public Simulation(AgingInputProfile inputProfile, Environment environment, GenericFeedbackLoop approach, MainGUI gui){
         this.environment = environment;
         this.inputProfile = inputProfile;
         this.approach = approach;
@@ -70,7 +70,7 @@ public class Simulation implements Runnable {
      * @return The InputProfile used in the simulation.
      */
     
-    public InputProfile getInputProfile() {
+    public AgingInputProfile getInputProfile() {
         return inputProfile;
     }
     /**
@@ -78,7 +78,7 @@ public class Simulation implements Runnable {
      * @param inputProfile  The InputProfile to use in the simulation.
      */
     
-    public void setInputProfile(InputProfile inputProfile) {
+    public void setInputProfile(AgingInputProfile inputProfile) {
         this.inputProfile = inputProfile;
     }
     /**
@@ -104,6 +104,7 @@ public class Simulation implements Runnable {
      */
     public void singleRun(Integer speed) {
         prepareSimulation();
+        setMoteInitialSettings();
 
         boolean arrived = true;
         HashMap<AgingMote,Integer> waypoinMap = new HashMap<>();
@@ -241,6 +242,14 @@ public class Simulation implements Runnable {
         }
     }
 
+    private void setMoteInitialSettings() {
+        getActiveMotesStream().forEach(m -> {
+            AgingMoteInputProfile moteInputProfile = inputProfile.getMoteInputProfile(getEnvironment().getMotes().indexOf(m));
+            m.setAge(moteInputProfile.getInitialAgeDuration());
+            m.setAgingFactor(getEnvironment().getAgingAdjustmentCalculator().getAgingFactorAfterAdjustments(m.getAge(), moteInputProfile.wasAdaptationApplied()));
+        });
+    }
+
     /**
      * A method for running the simulation as described in the inputProfile.
      */
@@ -248,10 +257,11 @@ public class Simulation implements Runnable {
         prepareSimulation();
 
         for(int i =0; i< getInputProfile().getNumberOfRuns();i++) {
-
             gui.setProgress(i,getInputProfile().getNumberOfRuns());
-            if(i != 0)
+            if(i != 0) {
                 getEnvironment().addRun();
+            }
+            setMoteInitialSettings();
 
             Boolean arrived = true;
             HashMap<AgingMote, Integer> waypoinMap = new HashMap<>();
