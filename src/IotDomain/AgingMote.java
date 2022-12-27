@@ -99,9 +99,39 @@ public class AgingMote extends Mote {
         this(DevEUI,xPos,yPos, environment,transmissionPower,SF,moteSensors,energyLevel,path,samplingRate, movementSpeed, Math.abs((new Random()).nextInt(5)),initialAge);
     }
 
-//    @Override
-//    public boolean shouldSend() {
-//        if (Math.random() > this.agingFactor) return super.shouldSend();
-//        return false;
-//    }
+    @Override
+    public boolean shouldSend() {
+        if (agingFactorAffectsExecution()) return false;
+        return super.shouldSend();
+    }
+
+    @Override
+    public void setEnergyLevel(Integer energyLevel) {
+        if (agingFactorAffectsExecution())
+            super.setEnergyLevel((int) (energyLevel * this.agingFactor * (Math.random() - .5)));
+        else super.setEnergyLevel(energyLevel);
+    }
+
+    @Override
+    public Integer getEnergyLevel() {
+        if (agingFactorAffectsExecution()) return (int) (super.getEnergyLevel() * this.agingFactor * (Math.random() - .5));
+        return super.getEnergyLevel();
+    }
+
+    @Override
+    public void addTransmissionPower(double transmissionPower) {
+        if (agingFactorAffectsExecution())
+            super.addTransmissionPower(transmissionPower * agingFactor * (Math.random() - .5));
+        else super.addTransmissionPower(transmissionPower);
+
+    }
+
+    @Override
+    public void enable(Boolean enabled) {
+        if (!agingFactorAffectsExecution()) super.enable(enabled);
+    }
+
+    private boolean agingFactorAffectsExecution() {
+        return Math.random() < this.agingFactor;
+    }
 }
