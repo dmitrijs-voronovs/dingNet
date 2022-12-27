@@ -11,9 +11,7 @@ public class AgingMote extends Mote {
     @Override
     public void reset() {
         super.reset();
-//        TODO: maybe reset to input config values??
         updateAge();
-        setTotalEnergyConsumed(0f);
         this.agingFactorHistory = new Vector<>();
         this.agingFactorHistory.add(new Vector<>());
     }
@@ -25,7 +23,6 @@ public class AgingMote extends Mote {
         updateAge();
     }
 
-//    TODO: with input profile values
     protected void updateAge() {
         setAgingFactor(0);
         setAge(Duration.ZERO);
@@ -60,16 +57,6 @@ public class AgingMote extends Mote {
 
     protected Vector<Vector<Float>> agingFactorHistory;
 
-    protected float totalEnergyConsumed = 0;
-
-    public void setTotalEnergyConsumed(float totalEnergyConsumed) {
-        this.totalEnergyConsumed = totalEnergyConsumed;
-    }
-
-    public float getTotalEnergyConsumed() {
-        return totalEnergyConsumed;
-    }
-
     public float getAgingFactor() {
         return agingFactor;
     }
@@ -94,18 +81,22 @@ public class AgingMote extends Mote {
         setAge(age.plus(Constants.SIMULATION_STEP_TIME));
     }
 
-    public AgingMote(Long DevEUI, Integer xPos, Integer yPos, Environment environment, Integer transmissionPower, Integer SF, LinkedList<MoteSensor> moteSensors, Integer energyLevel, LinkedList<GeoPosition> path, Integer samplingRate, Double movementSpeed, Integer startOffset, Duration initialAge, float initialTotalEnergyConsumed) {
+    public AgingMote(Long DevEUI, Integer xPos, Integer yPos, Environment environment, Integer transmissionPower, Integer SF, LinkedList<MoteSensor> moteSensors, Integer energyLevel, LinkedList<GeoPosition> path, Integer samplingRate, Double movementSpeed, Integer startOffset, Duration initialAge) {
         super(DevEUI, xPos, yPos, environment, transmissionPower, SF, moteSensors, energyLevel, path, samplingRate, movementSpeed, startOffset);
         environment.addMote(this);
         setAge(initialAge);
-        setTotalEnergyConsumed(initialTotalEnergyConsumed);
         this.agingFactorHistory = new Vector<>();
         this.agingFactorHistory.add(new Vector<>());
     }
 
     public AgingMote(Long DevEUI, Integer xPos, Integer yPos, Environment environment, Integer transmissionPower,
                      Integer SF, LinkedList<MoteSensor> moteSensors, Integer energyLevel, LinkedList<GeoPosition> path, Integer samplingRate, Double movementSpeed){
-        this(DevEUI,xPos,yPos, environment,transmissionPower,SF,moteSensors,energyLevel,path,samplingRate, movementSpeed, Math.abs((new Random()).nextInt(5)),Duration.ZERO,0);
+        this(DevEUI,xPos,yPos, environment,transmissionPower,SF,moteSensors,energyLevel,path,samplingRate, movementSpeed, Math.abs((new Random()).nextInt(5)),Duration.ZERO);
+    }
+
+    public AgingMote(Long DevEUI, Integer xPos, Integer yPos, Environment environment, Integer transmissionPower,
+                     Integer SF, LinkedList<MoteSensor> moteSensors, Integer energyLevel, LinkedList<GeoPosition> path, Integer samplingRate, Double movementSpeed, Duration initialAge){
+        this(DevEUI,xPos,yPos, environment,transmissionPower,SF,moteSensors,energyLevel,path,samplingRate, movementSpeed, Math.abs((new Random()).nextInt(5)),initialAge);
     }
 
 //    @Override

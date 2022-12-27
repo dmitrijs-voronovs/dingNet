@@ -23,8 +23,8 @@
             <mote>
                 <moteNumber>1</moteNumber>
                 <activityProbability>0.7</activityProbability>
-                <initialAge>1</initialAge>
-                <initialAgeUnit>hours</initialAgeUnit>
+                <initialAge>5</initialAge>
+                <initialAgeUnit>years</initialAgeUnit>
                 <adaptationWasApplied>false</adaptationWasApplied>
             </mote>
             <mote>
