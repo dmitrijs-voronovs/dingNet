@@ -95,8 +95,8 @@ public class Environment implements Serializable {
         this.wayPoints = wayPoints;
         numberOfRuns = 1;
         agingAdjustmentCalculator = new AgingAdjustmentCalculator(Constants.DEVICE_LIFESPAN,
-                Constants.SIMULATION_TIME_STEP,
-                Constants.COMPENSATION_COEFFICIENT);
+                Constants.SIMULATION_STEP_TIME,
+                Constants.AGING_COMPENSATION_COEFFICIENT);
     }
 
     /**

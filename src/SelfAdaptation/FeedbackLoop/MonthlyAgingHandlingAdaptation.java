@@ -10,7 +10,7 @@ import java.util.HashMap;
 
 public class MonthlyAgingHandlingAdaptation extends GenericFeedbackLoop {
     private final HashMap<Mote, LocalTime> messageDepartureTimeBuffer = new HashMap<>();
-    private final EnergyAdjustmentCalculator energyAdjustmentCalculator = new EnergyAdjustmentCalculator(Constants.AGING_ADJUSTMENT_MULTIPLIER);
+    private final EnergyAdjustmentCalculator energyAdjustmentCalculator = new EnergyAdjustmentCalculator(Constants.ENERGY_ADJUSTMENT_MULTIPLIER);
     public MonthlyAgingHandlingAdaptation(){
         super("Aging-factor-based");
     }
@@ -45,7 +45,7 @@ public class MonthlyAgingHandlingAdaptation extends GenericFeedbackLoop {
     }
 
     private static long getAdjustedTimeMs(LocalTime time) {
-        return TimeHelper.localTimeToMillis(time) * Constants.SIMULATION_TIME_STEP.toMillis();
+        return TimeHelper.localTimeToMillis(time) * Constants.SIMULATION_STEP_TIME.toMillis();
     }
 
     private static LoraTransmission getLastTransmission(Gateway dataGateway) {
