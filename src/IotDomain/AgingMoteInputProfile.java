@@ -1,10 +1,12 @@
 package IotDomain;
 
+import utils.TimeHelper;
+
 import java.time.Duration;
 
 public class AgingMoteInputProfile {
     private double activityProbability;
-    private Duration initialAge;
+    private Pair<Long, String> initialAge;
     private boolean adaptationWasApplied;
 
     public double getActivityProbability() {
@@ -15,15 +17,19 @@ public class AgingMoteInputProfile {
         this.activityProbability = activityProbability;
     }
 
-    public Duration getInitialAge() {
+    public Pair<Long, String> getInitialAge() {
         return initialAge;
     }
 
-    public void setInitialAge(Duration initialAge) {
+    public Duration getInitialAgeDuration() {
+        return TimeHelper.parseDuration(initialAge.getLeft(), initialAge.getRight());
+    }
+
+    public void setInitialAge(Pair<Long, String> initialAge) {
         this.initialAge = initialAge;
     }
 
-    public boolean isAdaptationWasApplied() {
+    public boolean wasAdaptationApplied() {
         return adaptationWasApplied;
     }
 
@@ -31,7 +37,7 @@ public class AgingMoteInputProfile {
         this.adaptationWasApplied = adaptationWasApplied;
     }
 
-    public AgingMoteInputProfile(double activityProbability, Duration initialAge, boolean adaptationWasApplied) {
+    public AgingMoteInputProfile(double activityProbability, Pair<Long, String> initialAge, boolean adaptationWasApplied) {
         this.activityProbability = activityProbability;
         this.initialAge = initialAge;
         this.adaptationWasApplied = adaptationWasApplied;
