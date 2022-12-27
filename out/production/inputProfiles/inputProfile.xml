@@ -1,91 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<inputProfiles>
-    <inputProfile>
-        <name>ReliableEfficient</name>
-        <numberOfRuns>10</numberOfRuns>
-        <deviceAdjustmentRate>1</deviceAdjustmentRate>
-        <deviceAdjustmentRateUnit>months</deviceAdjustmentRateUnit>
-        <agingCompensationCoefficient>0.95</agingCompensationCoefficient>
-        <energyAdjustmentMultiplier>300.0</energyAdjustmentMultiplier>
-        <deviceLifespan>15</deviceLifespan>
-        <deviceLifespanUnit>years</deviceLifespanUnit>
-        <simulationBeginning>2022-01-01</simulationBeginning>
-        <simulationStepTime>10</simulationStepTime>
-        <simulationStepTimeUnit>minutes</simulationStepTimeUnit>
-        <QoS>
-            <adaptationGoal type="interval">
-                <name>reliableCommunication</name>
-                <upperValue>-45.0</upperValue>
-                <lowerValue>-50.0</lowerValue>
-            </adaptationGoal>
-        </QoS>
-        <moteProbabilities>
-            <mote>
-                <moteNumber>1</moteNumber>
-                <activityProbability>1.0</activityProbability>
-                <initialAge>5</initialAge>
-                <initialAgeUnit>hours</initialAgeUnit>
-                <adaptationWasApplied>false</adaptationWasApplied>
-            </mote>
-            <mote>
-                <moteNumber>0</moteNumber>
-                <activityProbability>1.0</activityProbability>
-                <initialAge>5</initialAge>
-                <initialAgeUnit>years</initialAgeUnit>
-                <adaptationWasApplied>true</adaptationWasApplied>
-            </mote>
-            <mote>
-                <moteNumber>2</moteNumber>
-                <activityProbability>0.9400000000000001</activityProbability>
-                <initialAge>1</initialAge>
-                <initialAgeUnit>seconds</initialAgeUnit>
-                <adaptationWasApplied>true</adaptationWasApplied>
-            </mote>
-            <mote>
-                <moteNumber>18</moteNumber>
-                <activityProbability>0.09</activityProbability>
-                <initialAge>0</initialAge>
-                <initialAgeUnit>seconds</initialAgeUnit>
-                <adaptationWasApplied>true</adaptationWasApplied>
-            </mote>
-            <mote>
-                <moteNumber>3</moteNumber>
-                <activityProbability>0.86</activityProbability>
-                <initialAge>1</initialAge>
-                <initialAgeUnit>seconds</initialAgeUnit>
-                <adaptationWasApplied>true</adaptationWasApplied>
-            </mote>
-            <mote>
-                <moteNumber>4</moteNumber>
-                <activityProbability>1.0</activityProbability>
-                <initialAge>1</initialAge>
-                <initialAgeUnit>hours</initialAgeUnit>
-                <adaptationWasApplied>true</adaptationWasApplied>
-            </mote>
-            <mote>
-                <moteNumber>5</moteNumber>
-                <activityProbability>1.0</activityProbability>
-                <initialAge>1</initialAge>
-                <initialAgeUnit>years</initialAgeUnit>
-                <adaptationWasApplied>true</adaptationWasApplied>
-            </mote>
-            <mote>
-                <moteNumber>6</moteNumber>
-                <activityProbability>1.0</activityProbability>
-                <initialAge>1</initialAge>
-                <initialAgeUnit>weeks</initialAgeUnit>
-                <adaptationWasApplied>true</adaptationWasApplied>
-            </mote>
-            <mote>
-                <moteNumber>7</moteNumber>
-                <activityProbability>1.0</activityProbability>
-                <initialAge>1</initialAge>
-                <initialAgeUnit>months</initialAgeUnit>
-                <adaptationWasApplied>true</adaptationWasApplied>
-            </mote>
-        </moteProbabilities>
-    </inputProfile>
-    <inputProfile>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><inputProfiles><inputProfile><name>ReliableEfficient</name><numberOfRuns>10</numberOfRuns><deviceAdjustmentRate>1</deviceAdjustmentRate><deviceAdjustmentRateUnit>months</deviceAdjustmentRateUnit><agingCompensationCoefficient>0.83</agingCompensationCoefficient><energyAdjustmentMultiplier>300.0</energyAdjustmentMultiplier><deviceLifespan>11</deviceLifespan><deviceLifespanUnit>years</deviceLifespanUnit><simulationBeginning>2022-01-01</simulationBeginning><simulationStepTime>12</simulationStepTime><simulationStepTimeUnit>minutes</simulationStepTimeUnit><QoS><adaptationGoal type="interval"><name>reliableCommunication</name><upperValue>-45.0</upperValue><lowerValue>-50.0</lowerValue></adaptationGoal></QoS><moteProbabilities><mote><moteNumber>1</moteNumber><activityProbability>1.0</activityProbability><initialAge>1</initialAge><initialAgeUnit>years</initialAgeUnit><adaptationWasApplied>false</adaptationWasApplied></mote><mote><moteNumber>0</moteNumber><activityProbability>1.0</activityProbability><initialAge>5</initialAge><initialAgeUnit>years</initialAgeUnit><adaptationWasApplied>true</adaptationWasApplied></mote><mote><moteNumber>2</moteNumber><activityProbability>0.9400000000000001</activityProbability><initialAge>5</initialAge><initialAgeUnit>seconds</initialAgeUnit><adaptationWasApplied>true</adaptationWasApplied></mote><mote><moteNumber>18</moteNumber><activityProbability>0.09</activityProbability><initialAge>0</initialAge><initialAgeUnit>seconds</initialAgeUnit><adaptationWasApplied>true</adaptationWasApplied></mote><mote><moteNumber>3</moteNumber><activityProbability>0.86</activityProbability><initialAge>1</initialAge><initialAgeUnit>seconds</initialAgeUnit><adaptationWasApplied>true</adaptationWasApplied></mote><mote><moteNumber>4</moteNumber><activityProbability>1.0</activityProbability><initialAge>1</initialAge><initialAgeUnit>hours</initialAgeUnit><adaptationWasApplied>true</adaptationWasApplied></mote><mote><moteNumber>5</moteNumber><activityProbability>1.0</activityProbability><initialAge>1</initialAge><initialAgeUnit>years</initialAgeUnit><adaptationWasApplied>true</adaptationWasApplied></mote><mote><moteNumber>6</moteNumber><activityProbability>1.0</activityProbability><initialAge>1</initialAge><initialAgeUnit>weeks</initialAgeUnit><adaptationWasApplied>true</adaptationWasApplied></mote><mote><moteNumber>7</moteNumber><activityProbability>1.0</activityProbability><initialAge>1</initialAge><initialAgeUnit>months</initialAgeUnit><adaptationWasApplied>true</adaptationWasApplied></mote></moteProbabilities></inputProfile><inputProfile>
         <name>ReliableEfficientOpen</name>
         <numberOfRuns>10</numberOfRuns>
         <deviceAdjustmentRate>1</deviceAdjustmentRate>
@@ -127,5 +40,4 @@
                 <adaptationWasApplied>true</adaptationWasApplied>
             </mote>
         </moteProbabilities>
-    </inputProfile>
-</inputProfiles>
+    </inputProfile></inputProfiles>
