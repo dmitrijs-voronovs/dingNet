@@ -1,9 +1,6 @@
 package GUI;
 
-import IotDomain.AgingInputProfile;
-import IotDomain.AgingMoteInputProfile;
-import IotDomain.Environment;
-import IotDomain.Mote;
+import IotDomain.*;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
@@ -61,15 +58,23 @@ public class EditInputProfileGUI {
         classSaveButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                InputProfileDetails inputProfileDetails = inputProfile.getInputProfileDetails();
+
                 inputProfile.setNumberOfRuns(Integer.valueOf((String) numberOfRoundsComboBox.getSelectedItem()));
+                inputProfileDetails.setDeviceAdjustmentRate(getDurationValue(deviceAdjustmentRate, deviceAdjustmentRateUnit));
+                inputProfileDetails.setAgingCompensationCoefficient(((Double) agingCompensationCoefficient.getValue()).floatValue());
+                inputProfileDetails.setEnergyAdjustmentMultiplier(((Double) energyAdjustmentMultiplier.getValue()).floatValue());
+                inputProfileDetails.setDeviceLifespan(getDurationValue(deviceLifespan, deviceLifespanUnit));
+                inputProfileDetails.setSimulationBeginning(simulationBeginning.getText());
+                inputProfileDetails.setSimulationStepTime(getDurationValue(simulationStepTime, simulationStepTimeUnit));
+
                 refresh();
             }
         });
         updateMoteButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                inputProfile.putProbabilitiyForMote(getSelectedMote(), (Double) moteProbSpinner.getValue());
-                refresh();
+                updateMoteInputProfile();
             }
         });
         moteNumberComboBox.addActionListener(new ActionListener() {
@@ -79,11 +84,35 @@ public class EditInputProfileGUI {
                     refreshMoteFields();
                 } else {
                     moteProbSpinner.setValue(1.00);
-                    inputProfile.putProbabilitiyForMote(getSelectedMote(), (Double) moteProbSpinner.getValue());
-                    refresh();
+                    initialAge.setValue(0L);
+                    initialAgeUnit.setSelectedItem("seconds");
+                    adaptationWasApplied.setSelected(true);
+
+                    updateMoteInputProfile();
                 }
             }
         });
+    }
+
+    private void updateMoteInputProfile() {
+        AgingMoteInputProfile moteInputProfile = inputProfile.getMoteInputProfile(getSelectedMote());
+        if (moteInputProfile != null) {
+            inputProfile.putProbabilitiyForMote(getSelectedMote(), (Double) moteProbSpinner.getValue());
+            moteInputProfile.setInitialAge(getDurationValue(initialAge, initialAgeUnit));
+            moteInputProfile.setAdaptationWasApplied(adaptationWasApplied.isSelected());
+        } else {
+            inputProfile.addMoteInputProfile(getSelectedMote(), new AgingMoteInputProfile(
+                    (Double) moteProbSpinner.getValue(),
+                    getDurationValue(initialAge, initialAgeUnit),
+                    adaptationWasApplied.isSelected()
+            ));
+        }
+
+        refresh();
+    }
+
+    private Pair<Long, String> getDurationValue(JSpinner spinner, JComboBox comboBox) {
+        return new Pair<>(((Number) spinner.getValue()).longValue(), (String) comboBox.getSelectedItem());
     }
 
     private void setConstants() {
@@ -92,6 +121,7 @@ public class EditInputProfileGUI {
     }
 
     private void refresh() {
+        inputProfile.updateFile();
         DOMSource DOMSource = new DOMSource(inputProfile.getXmlSource());
         StringWriter writer = new StringWriter();
         StreamResult result = new StreamResult(writer);
@@ -113,11 +143,18 @@ public class EditInputProfileGUI {
         }
 
         if (environment != null) {
+            int prevSelected = getSelectedMote();
             moteNumberComboBox.removeAllItems();
             for (Mote mote : environment.getMotes()) {
                 moteNumberComboBox.addItem("Mote " + (environment.getMotes().indexOf(mote) + 1));
             }
-            moteNumberComboBox.setSelectedIndex(0);
+
+            if (prevSelected >= 0 && prevSelected <= moteNumberComboBox.getItemCount() - 1) {
+                moteNumberComboBox.setSelectedIndex(prevSelected);
+            } else {
+                moteNumberComboBox.setSelectedIndex(0);
+            }
+
         } else {
             moteNumberComboBox.removeAllItems();
         }

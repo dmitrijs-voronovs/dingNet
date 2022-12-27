@@ -6,11 +6,11 @@
         <deviceAdjustmentRate>1</deviceAdjustmentRate>
         <deviceAdjustmentRateUnit>months</deviceAdjustmentRateUnit>
         <agingCompensationCoefficient>0.95</agingCompensationCoefficient>
-        <energyAdjustmentMultiplier>300</energyAdjustmentMultiplier>
-        <deviceLifespan>6</deviceLifespan>
+        <energyAdjustmentMultiplier>300.0</energyAdjustmentMultiplier>
+        <deviceLifespan>15</deviceLifespan>
         <deviceLifespanUnit>years</deviceLifespanUnit>
         <simulationBeginning>2022-01-01</simulationBeginning>
-        <simulationStepTime>30</simulationStepTime>
+        <simulationStepTime>10</simulationStepTime>
         <simulationStepTimeUnit>minutes</simulationStepTimeUnit>
         <QoS>
             <adaptationGoal type="interval">
@@ -19,12 +19,12 @@
                 <lowerValue>-50.0</lowerValue>
             </adaptationGoal>
         </QoS>
-        <moteProbabilaties>
+        <moteProbabilities>
             <mote>
                 <moteNumber>1</moteNumber>
-                <activityProbability>0.7</activityProbability>
+                <activityProbability>1.0</activityProbability>
                 <initialAge>5</initialAge>
-                <initialAgeUnit>years</initialAgeUnit>
+                <initialAgeUnit>hours</initialAgeUnit>
                 <adaptationWasApplied>false</adaptationWasApplied>
             </mote>
             <mote>
@@ -36,9 +36,16 @@
             </mote>
             <mote>
                 <moteNumber>2</moteNumber>
-                <activityProbability>1.0</activityProbability>
+                <activityProbability>0.9400000000000001</activityProbability>
                 <initialAge>1</initialAge>
-                <initialAgeUnit>months</initialAgeUnit>
+                <initialAgeUnit>seconds</initialAgeUnit>
+                <adaptationWasApplied>true</adaptationWasApplied>
+            </mote>
+            <mote>
+                <moteNumber>18</moteNumber>
+                <activityProbability>0.09</activityProbability>
+                <initialAge>0</initialAge>
+                <initialAgeUnit>seconds</initialAgeUnit>
                 <adaptationWasApplied>true</adaptationWasApplied>
             </mote>
             <mote>
@@ -76,7 +83,7 @@
                 <initialAgeUnit>months</initialAgeUnit>
                 <adaptationWasApplied>true</adaptationWasApplied>
             </mote>
-        </moteProbabilaties>
+        </moteProbabilities>
     </inputProfile>
     <inputProfile>
         <name>ReliableEfficientOpen</name>
@@ -84,8 +91,8 @@
         <deviceAdjustmentRate>1</deviceAdjustmentRate>
         <deviceAdjustmentRateUnit>months</deviceAdjustmentRateUnit>
         <agingCompensationCoefficient>0.95</agingCompensationCoefficient>
-        <energyAdjustmentMultiplier>300</energyAdjustmentMultiplier>
-        <deviceLifespan>20</deviceLifespan>
+        <energyAdjustmentMultiplier>300.0</energyAdjustmentMultiplier>
+        <deviceLifespan>15</deviceLifespan>
         <deviceLifespanUnit>years</deviceLifespanUnit>
         <simulationBeginning>2022-01-01</simulationBeginning>
         <simulationStepTime>30</simulationStepTime>
@@ -97,7 +104,7 @@
                 <lowerValue>-48.0</lowerValue>
             </adaptationGoal>
         </QoS>
-        <moteProbabilaties>
+        <moteProbabilities>
             <mote>
                 <moteNumber>1</moteNumber>
                 <activityProbability>1.0</activityProbability>
@@ -119,6 +126,6 @@
                 <initialAgeUnit>hours</initialAgeUnit>
                 <adaptationWasApplied>true</adaptationWasApplied>
             </mote>
-        </moteProbabilaties>
+        </moteProbabilities>
     </inputProfile>
 </inputProfiles>

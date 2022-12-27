@@ -202,16 +202,18 @@ public class Simulation implements Runnable {
     private void prepareSimulation() {
         // reset the environment.
         getEnvironment().reset();
+        enableMotes();
 
-        InputProfileDetails inputProfileDetails = inputProfile.getInputProfileDetails();
-        getEnvironment().setAgingAdjustmentCalculator(new AgingAdjustmentCalculator(inputProfileDetails.getDeviceLifespanDuration(),
-                inputProfileDetails.getSimulationStepTimeDuration(),
-                inputProfileDetails.getAgingCompensationCoefficient()));
+        if (inputProfile != null) {
+            InputProfileDetails inputProfileDetails = inputProfile.getInputProfileDetails();
+            getEnvironment().setAgingAdjustmentCalculator(new AgingAdjustmentCalculator(inputProfileDetails.getDeviceLifespanDuration(),
+                    inputProfileDetails.getSimulationStepTimeDuration(),
+                    inputProfileDetails.getAgingCompensationCoefficient()));
 
-        getApproach().setup(inputProfile);
+            if(getApproach() != null) getApproach().setup(inputProfile);
+        }
 
         //Check if a mote can participate in this run.
-        enableMotes();
     }
 
     private void envTick() {
@@ -254,8 +256,10 @@ public class Simulation implements Runnable {
     private void setMoteInitialSettings() {
         getActiveMotesStream().forEach(m -> {
             AgingMoteInputProfile moteInputProfile = inputProfile.getMoteInputProfile(getEnvironment().getMotes().indexOf(m));
-            m.setAge(moteInputProfile.getInitialAgeDuration());
-            m.setAgingFactor(getEnvironment().getAgingAdjustmentCalculator().getAgingFactorAfterAdjustments(m.getAge(), moteInputProfile.wasAdaptationApplied()));
+            if (moteInputProfile != null) {
+                m.setAge(moteInputProfile.getInitialAgeDuration());
+                m.setAgingFactor(getEnvironment().getAgingAdjustmentCalculator().getAgingFactorAfterAdjustments(m.getAge(), moteInputProfile.wasAdaptationApplied()));
+            }
         });
     }
 
