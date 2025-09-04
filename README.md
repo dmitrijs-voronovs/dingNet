@@ -1,6 +1,8 @@
 # Project: Adaptive IoT Network Simulator Extension
 
-This project extends **DingNet** (version `1.2.1.`), an open-source IoT network simulator, to create a self-adaptive system that intelligently manages the power consumption of IoT devices (motes) in response to device aging. The primary goal is to enhance the reliability of data transmission by dynamically adjusting mote settings based on real-time network conditions.
+This project was developed as a university assignment for the "Fundamentals of Adaptive Software" course. It extends **DingNet** (version `1.2.1.`), an open-source IoT network simulator, to create a self-adaptive system that intelligently manages the power consumption of IoT devices (motes) in response to device aging. The primary goal is to enhance the reliability of data transmission by dynamically adjusting mote settings based on real-time network conditions.
+
+A comprehensive report detailing the project's analysis, design, and implementation can be found [here](report/DingNet3-Implementation_and_demo.pdf).
 
 ## Architectural Decisions & Key Changes
 
