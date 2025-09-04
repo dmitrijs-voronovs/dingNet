@@ -12,7 +12,7 @@ public class MoteProbe {
     /**
      * A list with feedBackLoops using the probe.
      */
-    private GenericFeedbackLoop genericFeedbackLoop;
+    protected GenericFeedbackLoop genericFeedbackLoop;
 
     /**
      * Constructs a MoteProbe with no FeedBackLoops using it.
@@ -117,8 +117,8 @@ public class MoteProbe {
      */
     public void trigger(Gateway gateway, Long devEUI){
         Boolean found = false;
-        Mote sender = null;
-        for (Mote mote :gateway.getEnvironment().getMotes()){
+        AgingMote sender = null;
+        for (AgingMote mote :gateway.getEnvironment().getMotes()){
             if(mote.getEUI() == devEUI){
                 sender = mote;
                 found = true;

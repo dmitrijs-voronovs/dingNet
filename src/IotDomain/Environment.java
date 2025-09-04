@@ -1,6 +1,7 @@
 package IotDomain;
 
 
+import SelfAdaptation.FeedbackLoop.utils.AgingAdjustmentCalculator;
 import org.jxmapviewer.viewer.GeoPosition;
 
 import java.io.Serializable;
@@ -29,9 +30,13 @@ public class Environment implements Serializable {
      */
     private final Integer maxYpos;
     /**
+     * calculator for device aging adjustment
+     */
+    private AgingAdjustmentCalculator agingAdjustmentCalculator;
+    /**
      * A list containing all motes currently active on the map.
      */
-    private LinkedList<Mote> motes = new LinkedList<>();
+    private LinkedList<AgingMote> motes = new LinkedList<>();
 
     /**
      * A list containing all gateways currently active on the map.
@@ -201,7 +206,7 @@ public class Environment implements Serializable {
      * @return A list with all the motes on the map.
      */
     
-    public LinkedList<Mote> getMotes() {
+    public LinkedList<AgingMote> getMotes() {
         return motes;
     }
 
@@ -211,7 +216,7 @@ public class Environment implements Serializable {
      * @Post    If the mote is in this environment, it is added to the list.
      */
     
-    public void addMote(Mote mote) {
+    public void addMote(AgingMote mote) {
         if(mote.getEnvironment() == this){
             motes.add(mote);
         }
@@ -265,11 +270,11 @@ public class Environment implements Serializable {
 
     /**
      * Increases the time with a given amount of miliseconds.
-     * @param milliSeconds
+     * @param ms
      * @Post Increases the time with a given amount of miliseconds.
      */
-    public void tick(long milliSeconds) {
-        this.clock= this.clock.plus(milliSeconds, ChronoUnit.MILLIS);
+    public void tick(long ms) {
+        this.clock = this.clock.plus(ms, ChronoUnit.MILLIS);
     }
 
     public void resetClock(){
@@ -428,5 +433,12 @@ public class Environment implements Serializable {
     }
 
 
+    public AgingAdjustmentCalculator getAgingAdjustmentCalculator() {
+        return agingAdjustmentCalculator;
+    }
+
+    public void setAgingAdjustmentCalculator(AgingAdjustmentCalculator agingAdjustmentCalculator) {
+        this.agingAdjustmentCalculator = agingAdjustmentCalculator;
+    }
 }
 

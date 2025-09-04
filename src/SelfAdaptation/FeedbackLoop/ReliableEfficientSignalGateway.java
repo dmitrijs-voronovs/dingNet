@@ -1,9 +1,6 @@
 package SelfAdaptation.FeedbackLoop;
 
-import IotDomain.Gateway;
-import IotDomain.LoraTransmission;
-import IotDomain.Mote;
-import IotDomain.QualityOfService;
+import IotDomain.*;
 import SelfAdaptation.AdaptationGoals.IntervalAdaptationGoal;
 import SelfAdaptation.Instrumentation.FeedbackLoopGatewayBuffer;
 
@@ -93,7 +90,7 @@ public class ReliableEfficientSignalGateway extends GenericFeedbackLoop {
     }
 
     @Override
-    public void adapt(Mote mote, Gateway dataGateway) {
+    public void adapt(AgingMote mote, Gateway dataGateway) {
         /**
          First we check if we have received the message already from all gateways.
          */

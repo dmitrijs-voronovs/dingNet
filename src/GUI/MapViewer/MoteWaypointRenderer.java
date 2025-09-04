@@ -61,4 +61,30 @@ public class MoteWaypointRenderer implements WaypointRenderer<Waypoint>
 
         g.drawImage(img, x, y, null);
     }
+
+    public void paintWaypoint(Graphics2D g, JXMapViewer map, Waypoint w, float agingFactor)
+    {
+        updateMoteColor(agingFactor);
+        paintWaypoint(g, map, w);
+    }
+
+    private void updateMoteColor(float agingFactor) {
+        int width = img.getWidth();
+        int height = img.getHeight();
+
+        for (int xx = 0; xx < width; xx++) {
+            for (int yy = 0; yy < height; yy++) {
+
+                float red = (2.0f * agingFactor) > 1.0 ? 1.0f : (2.0f * agingFactor);
+                float green = (2.0f * (1 - agingFactor)) > 1.0 ? 1.0f : (2.0f * (1 - agingFactor));
+
+                Color originalColor = new Color(img.getRGB(xx, yy), true);
+                Color ageColor = new Color(red, green, 0);
+
+                if (originalColor.getAlpha() == 255) {
+                    img.setRGB(xx, yy, ageColor.getRGB());
+                }
+            }
+        }
+    }
 }
